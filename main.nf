@@ -166,7 +166,7 @@ process summaryVcf {
   """
   mkdir -p ${name}_stats
   bcftools stats $vcf > ${name}_stats/${vcf.baseName}.stats
-  plot-vcfstats -p ${name}_stats --no-PDF --title ${name} ${vcf.baseName}.stats
+  plot-vcfstats -p ${name}_stats/${name}_stats --no-PDF --title ${name} ${vcf.baseName}.stats
   """
 }
 
