@@ -59,7 +59,7 @@ if (params.filter) {
   process filterVcf {
     cpus 1
     memory '4g'
-    module 'anaconda/3/2019'
+    container 'biocontainers/bcftools'
     tag "${name}"
     publishDir "${publish_dir}", mode: "copy"
 
@@ -87,7 +87,7 @@ Adds the required read groups fields to the BAM file. The provided type is added
 process normalizeVcf {
     cpus 1
     memory '4g'
-    module 'anaconda/3/2019'
+    container 'biocontainers/bcftools'
     tag "${name}"
     publishDir "${publish_dir}", mode: "copy"
 
