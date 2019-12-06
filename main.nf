@@ -10,7 +10,7 @@ params.filter = false
 def helpMessage() {
     log.info"""
 Usage:
-    variant_normalization.nf --input_files input_files --reference reference.fasta
+    nextflow run main.nf --input_files input_files --reference reference.fasta
 
 This workflow implements a VT VCF normalization pipeline (vt v0.5772)
 
@@ -63,6 +63,7 @@ if (params.filter) {
     //container 'biocontainers/bcftools'
     module 'anaconda/3/2019'
     tag "${name}"
+
 
     input:
     	set name, file(vcf) from input_files
@@ -160,12 +161,11 @@ process summaryVcf {
     set name, file(vcf) from normalized_vcf2
 
   output:
-    file("${vcf.baseName}.stats") into vcf_stats
     file("${name}_stats/*") into vcf_stats_plots
 
   """
-  bcftools stats $vcf > ${vcf.baseName}.stats
   mkdir -p ${name}_stats
+  bcftools stats $vcf > ${name}_stats/${vcf.baseName}.stats
   plot-vcfstats -p ${name}_stats --no-PDF --title ${name} ${vcf.baseName}.stats
   """
 }

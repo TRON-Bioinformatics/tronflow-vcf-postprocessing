@@ -20,7 +20,7 @@ The output consists of:
  ```
  $ nextflow run tron/tron-variant_normalization -r v0.1.0 --help
  Usage:
-     variant_normalization.nf --input_files input_files --reference reference.fasta
+     nextflow run main.nf --input_files input_files --reference reference.fasta
  
  This workflow implements a VT VCF normalization pipeline (vt v0.5772)
  
