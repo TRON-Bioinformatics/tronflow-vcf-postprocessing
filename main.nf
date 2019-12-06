@@ -12,7 +12,7 @@ def helpMessage() {
 Usage:
     variant_normalization.nf --input_files input_files --reference reference.fasta
 
-This workflow implements a VT VCF normalization pipeline
+This workflow implements a VT VCF normalization pipeline (vt v0.5772)
 
 Input:
     * input_files: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file
