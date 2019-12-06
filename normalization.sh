@@ -1,9 +1,10 @@
+#!/usr/bin/env bash
+
 vcf=$1
 reference=$2
 
 
-# creates a summary of the VCF before normalizing
-vt peek $vcf -y `basename $vcf .vcf`.summary.pdf 2> `basename $vcf .vcf`.summary.txt
+module load anaconda/3/2019
 
 # separate first by variant type
 bcftools view --types snps -o `basename $vcf .vcf`.original.snps.vcf $vcf
@@ -16,22 +17,19 @@ bcftools view --types other -o `basename $vcf .vcf`.original.other.vcf $vcf
 # decompose biallelic block substitutions (AC>TG to A>T and C>G)
 # -a: best guess for non blocked substitutions
 # -p: output phased genotypes and PS annotation
-vt decompose_blocksub $vcf -a -p -o `basename $vcf .vcf`.atomic.vcf 2> `basename $vcf .vcf`.decompose_blocksub_stats.txt
+vt decompose_blocksub $vcf -a -p -o `basename $vcf .vcf`.atomic.vcf 2> `basename $vcf .vcf`.decompose_blocksub_stats.log
 
 # decompose multiallelic variants into biallelic (C>T,G to C>T and C>G)
-vt decompose `basename $vcf .vcf`.atomic.vcf -o `basename $vcf .vcf`.biallelic.vcf 2> `basename $vcf .vcf`.decompose_stats.txt
+vt decompose `basename $vcf .vcf`.atomic.vcf -o `basename $vcf .vcf`.biallelic.vcf 2> `basename $vcf .vcf`.decompose_stats.log
 
 # sort the input VCF
 vt sort `basename $vcf .vcf`.biallelic.vcf -o `basename $vcf .vcf`.sorted.vcf
 
 # normalize variants (trim and left alignment)
-vt normalize `basename $vcf .vcf`.sorted.vcf -r $reference -o `basename $vcf .vcf`.normalized.vcf 2> `basename $vcf .vcf`.normalization_stats.txt
+vt normalize `basename $vcf .vcf`.sorted.vcf -r $reference -o `basename $vcf .vcf`.normalized.vcf 2> `basename $vcf .vcf`.normalization_stats.log
 
 # removes duplicated variants
-vt uniq `basename $vcf .vcf`.normalized.vcf -o `basename $vcf .vcf`.uniq.vcf 2> `basename $vcf .vcf`.uniq_stats.txt
-
-# creates a summary of the VCF after normalizing
-vt peek `basename $vcf .vcf`.uniq.vcf -y `basename $vcf .vcf`.normalized.summary.pdf 2> `basename $vcf .vcf`.normalized.summary.txt
+vt uniq `basename $vcf .vcf`.normalized.vcf -o `basename $vcf .vcf`.uniq.vcf 2> `basename $vcf .vcf`.uniq_stats.log
 
 # separate by variant type once normalized
 bcftools view --types snps -o `basename $vcf .vcf`.normalized.snps.vcf `basename $vcf .vcf`.uniq.vcf
