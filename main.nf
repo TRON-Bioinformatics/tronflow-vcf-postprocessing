@@ -98,14 +98,21 @@ process normalizeVcf {
     	set name, file(vcf) from filtered_vcf
 
     output:
-      set name, file("${vcf.baseName}.normalized.vcf") into normalized_vcf
       set name, file("${vcf.baseName}.normalized.vcf") into normalized_vcf2
-      set name, file("${vcf.baseName}.normalized.snps.vcf") into normalized_snps_vcf
-      set name, file("${vcf.baseName}.normalized.indels.vcf") into normalized_indels_vcf
-      set name, file("${vcf.baseName}.normalized.mnps.vcf") into normalized_mnps_vcf
-      set name, file("${vcf.baseName}.normalized.ref.vcf") into normalized_ref_vcf
-      set name, file("${vcf.baseName}.normalized.bnd.vcf") into normalized_bnd_vcf
-      set name, file("${vcf.baseName}.normalized.other.vcf") into normalized_other_vcf
+      file("${vcf.baseName}.normalized.vcf") into normalized_vcf_file
+      set name, val("${publish_dir}/${vcf.baseName}.normalized.vcf") into normalized_vcf
+      file("${vcf.baseName}.normalized.snps.vcf") into normalized_snps_vcf_file
+      set name, val("${publish_dir}/${vcf.baseName}.normalized.snps.vcf") into normalized_snps_vcf
+      file("${vcf.baseName}.normalized.indels.vcf") into normalized_indels_vcf_file
+      set name, val("${publish_dir}/${vcf.baseName}.normalized.indels.vcf") into normalized_indels_vcf
+      file("${vcf.baseName}.normalized.mnps.vcf") into normalized_mnps_vcf_file
+      set name, val("${publish_dir}/${vcf.baseName}.normalized.mnps.vcf") into normalized_mnps_vcf
+      file("${vcf.baseName}.normalized.ref.vcf") into normalized_ref_vcf_file
+      set name, val("${publish_dir}/${vcf.baseName}.normalized.ref.vcf") into normalized_ref_vcf
+      file("${vcf.baseName}.normalized.bnd.vcf") into normalized_bnd_vcf_file
+      set name, val("${publish_dir}/${vcf.baseName}.normalized.bnd.vcf") into normalized_bnd_vcf
+      file("${vcf.baseName}.normalized.other.vcf") into normalized_other_vcf_file
+      set name, val("${publish_dir}/${vcf.baseName}.normalized.other.vcf") into normalized_other_vcf
       file("${vcf.baseName}.normalization.log") into normalization_log
 
     script:
