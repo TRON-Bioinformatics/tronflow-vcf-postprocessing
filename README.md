@@ -15,6 +15,9 @@ The output consists of:
  * Summary statistics and plots on the normalized VCF
 
 
+![Pipeline](variant_normalization_pipeline.png)
+
+
  ### How to run it
 
  ```
