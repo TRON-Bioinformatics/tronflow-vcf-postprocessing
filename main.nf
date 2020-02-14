@@ -6,6 +6,9 @@ params.reference = "/projects/data/gatk_bundle/hg19/ucsc.hg19.fasta"						// TOD
 params.output = false
 params.skip_split_mnps = false
 params.filter = false
+params.decompose_non_blocked_substitutions = false
+params.skip_duplication_removal = false
+params.skip_split_vcf_by_type = false
 
 def helpMessage() {
     log.info"""
@@ -25,6 +28,9 @@ Optional input:
     * reference: path to the FASTA genome reference (indexes expected *.fai, *.dict) [default: hg19]
     * output: the folder where to publish output
     * skip_split_mnps: flag indicating not to split MNPs
+    * decompose_non_blocked_substitutions: decomposes indels and SNVs blocked together despite being non deterministic
+    * skip_duplication_removal: flag indicating to skip duplication removal
+    * skip_split_vcf_by_type: flag indicating to skip splitting the VCF by variant type
     * filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
 
 Output:
@@ -99,33 +105,26 @@ process normalizeVcf {
 
     output:
       set name, file("${vcf.baseName}.normalized.vcf") into normalized_vcf2
-      file("${vcf.baseName}.normalized.vcf") into normalized_vcf_file
       set name, val("${publish_dir}/${name}/${vcf.baseName}.normalized.vcf") into normalized_vcf
-      file("${vcf.baseName}.normalized.snps.vcf") into normalized_snps_vcf_file
-      set name, val("${publish_dir}/${name}/${vcf.baseName}.normalized.snps.vcf") into normalized_snps_vcf
-      file("${vcf.baseName}.normalized.indels.vcf") into normalized_indels_vcf_file
-      set name, val("${publish_dir}/${name}/${vcf.baseName}.normalized.indels.vcf") into normalized_indels_vcf
-      file("${vcf.baseName}.normalized.mnps.vcf") into normalized_mnps_vcf_file
-      set name, val("${publish_dir}/${name}/${vcf.baseName}.normalized.mnps.vcf") into normalized_mnps_vcf
-      file("${vcf.baseName}.normalized.ref.vcf") into normalized_ref_vcf_file
-      set name, val("${publish_dir}/${name}/${vcf.baseName}.normalized.ref.vcf") into normalized_ref_vcf
-      file("${vcf.baseName}.normalized.bnd.vcf") into normalized_bnd_vcf_file
-      set name, val("${publish_dir}/${name}/${vcf.baseName}.normalized.bnd.vcf") into normalized_bnd_vcf
-      file("${vcf.baseName}.normalized.other.vcf") into normalized_other_vcf_file
-      set name, val("${publish_dir}/${name}/${vcf.baseName}.normalized.other.vcf") into normalized_other_vcf
+      file("${vcf.baseName}.normalized.snps.vcf") optional true into normalized_snps_vcf_file
+      file("${vcf.baseName}.normalized.indels.vcf") optional true into normalized_indels_vcf_file
+      file("${vcf.baseName}.normalized.mnps.vcf") optional true into normalized_mnps_vcf_file
+      file("${vcf.baseName}.normalized.ref.vcf") optional true into normalized_ref_vcf_file
+      file("${vcf.baseName}.normalized.bnd.vcf") optional true into normalized_bnd_vcf_file
+      file("${vcf.baseName}.normalized.other.vcf") optional true into normalized_other_vcf_file
       file("${vcf.baseName}.normalization.log") into normalization_log
 
     script:
-
+    decomposeNonBlockedSubstitutions = ${params.decompose_non_blocked_substitutions} ? " -a " : ""
     """
     # decompose biallelic block substitutions (AC>TG to A>T and C>G)
     # -a: best guess for non blocked substitutions
     # -p: output phased genotypes and PS annotation
-    if ["${params.skip_split_mnps}" = true] ; then
+    if (${params.skip_split_mnps} = true) ; then
       cp $vcf ${vcf.baseName}.atomic.vcf
       touch ${vcf.baseName}.decompose_blocksub_stats.log
     else
-      vt decompose_blocksub ${vcf} -a -p -o ${vcf.baseName}.atomic.vcf 2> ${vcf.baseName}.normalization.log
+      vt decompose_blocksub ${vcf} ${decomposeNonBlockedSubstitutions} -p -o ${vcf.baseName}.atomic.vcf 2> ${vcf.baseName}.normalization.log
     fi
 
     # decompose multiallelic variants into biallelic (C>T,G to C>T and C>G)
@@ -138,15 +137,22 @@ process normalizeVcf {
     vt normalize ${vcf.baseName}.sorted.vcf -r ${params.reference} -o ${vcf.baseName}.trimmed_left_aligned.vcf 2>> ${vcf.baseName}.normalization.log
 
     # removes duplicated variants
-    vt uniq ${vcf.baseName}.trimmed_left_aligned.vcf -o ${vcf.baseName}.normalized.vcf 2>> ${vcf.baseName}.normalization.log
+    if (${params.skip_duplication_removal} = false) ; then
+        cp ${vcf.baseName}.trimmed_left_aligned.vcf ${vcf.baseName}.normalized.vcf
+    else
+        vt uniq ${vcf.baseName}.trimmed_left_aligned.vcf -o ${vcf.baseName}.normalized.vcf 2>> ${vcf.baseName}.normalization.log
+    fi
+    
 
     # separate by variant type once normalized
-    bcftools view --types snps -o ${vcf.baseName}.normalized.snps.vcf ${vcf.baseName}.normalized.vcf
-    bcftools view --types indels -o ${vcf.baseName}.normalized.indels.vcf ${vcf.baseName}.normalized.vcf
-    bcftools view --types mnps -o ${vcf.baseName}.normalized.mnps.vcf ${vcf.baseName}.normalized.vcf
-    bcftools view --types ref -o ${vcf.baseName}.normalized.ref.vcf ${vcf.baseName}.normalized.vcf
-    bcftools view --types bnd -o ${vcf.baseName}.normalized.bnd.vcf ${vcf.baseName}.normalized.vcf
-    bcftools view --types other -o ${vcf.baseName}.normalized.other.vcf ${vcf.baseName}.normalized.vcf
+    if (${params.skip_split_vcf_by_type} = false) ; then
+        bcftools view --types snps -o ${vcf.baseName}.normalized.snps.vcf ${vcf.baseName}.normalized.vcf
+        bcftools view --types indels -o ${vcf.baseName}.normalized.indels.vcf ${vcf.baseName}.normalized.vcf
+        bcftools view --types mnps -o ${vcf.baseName}.normalized.mnps.vcf ${vcf.baseName}.normalized.vcf
+        bcftools view --types ref -o ${vcf.baseName}.normalized.ref.vcf ${vcf.baseName}.normalized.vcf
+        bcftools view --types bnd -o ${vcf.baseName}.normalized.bnd.vcf ${vcf.baseName}.normalized.vcf
+        bcftools view --types other -o ${vcf.baseName}.normalized.other.vcf ${vcf.baseName}.normalized.vcf  
+    fi
 
     # delete intermediate files
     rm -f ${vcf.baseName}.atomic.vcf
@@ -180,23 +186,3 @@ process summaryVcf {
 normalized_vcf
 	.map {it.join("\t")}
 	.collectFile(name: "${publish_dir}/normalized_vcfs.txt", newLine: true)
-
-normalized_snps_vcf
-	.map {it.join("\t")}
-	.collectFile(name: "${publish_dir}/normalized_snps_vcfs.txt", newLine: true)
-
-normalized_indels_vcf
-	.map {it.join("\t")}
-	.collectFile(name: "${publish_dir}/normalized_indels_vcfs.txt", newLine: true)
-
-normalized_mnps_vcf
-	.map {it.join("\t")}
-	.collectFile(name: "${publish_dir}/normalized_mnps_vcfs.txt", newLine: true)
-
-normalized_bnd_vcf
-	.map {it.join("\t")}
-	.collectFile(name: "${publish_dir}/normalized_bnd_vcfs.txt", newLine: true)
-
-normalized_other_vcf
-	.map {it.join("\t")}
-	.collectFile(name: "${publish_dir}/normalized_other_vcfs.txt", newLine: true)
