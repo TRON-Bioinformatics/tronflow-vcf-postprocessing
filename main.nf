@@ -27,7 +27,7 @@ Input:
 Optional input:
     * reference: path to the FASTA genome reference (indexes expected *.fai, *.dict) [default: hg19]
     * output: the folder where to publish output
-    * skip_split_mnps: flag indicating not to split MNPs
+    * skip_split_mnps: flag indicating not to split MNPs (overrides --decompose_non_blocked_substitutions)
     * decompose_non_blocked_substitutions: decomposes indels and SNVs blocked together despite being non deterministic
     * skip_duplication_removal: flag indicating to skip duplication removal
     * skip_split_vcf_by_type: flag indicating to skip splitting the VCF by variant type
@@ -104,61 +104,75 @@ process normalizeVcf {
     	set name, file(vcf) from filtered_vcf
 
     output:
-      set name, file("${vcf.baseName}.normalized.vcf") into normalized_vcf2
-      set name, val("${publish_dir}/${name}/${vcf.baseName}.normalized.vcf") into normalized_vcf
-      file("${vcf.baseName}.normalized.snps.vcf") optional true into normalized_snps_vcf_file
-      file("${vcf.baseName}.normalized.indels.vcf") optional true into normalized_indels_vcf_file
-      file("${vcf.baseName}.normalized.mnps.vcf") optional true into normalized_mnps_vcf_file
-      file("${vcf.baseName}.normalized.ref.vcf") optional true into normalized_ref_vcf_file
-      file("${vcf.baseName}.normalized.bnd.vcf") optional true into normalized_bnd_vcf_file
-      file("${vcf.baseName}.normalized.other.vcf") optional true into normalized_other_vcf_file
-      file("${vcf.baseName}.normalization.log") into normalization_log
+      set name, file("${name}.normalized.vcf") into normalized_vcf2
+      set name, val("${publish_dir}/${name}/${name}.normalized.vcf") into normalized_vcf
+      file("${name}.normalized.snps.vcf") optional true into normalized_snps_vcf_file
+      file("${name}.normalized.indels.vcf") optional true into normalized_indels_vcf_file
+      file("${name}.normalized.mnps.vcf") optional true into normalized_mnps_vcf_file
+      file("${name}.normalized.ref.vcf") optional true into normalized_ref_vcf_file
+      file("${name}.normalized.bnd.vcf") optional true into normalized_bnd_vcf_file
+      file("${name}.normalized.other.vcf") optional true into normalized_other_vcf_file
+      file("${name}.normalization.log") into normalization_log
 
     script:
-    decomposeNonBlockedSubstitutions = ${params.decompose_non_blocked_substitutions} ? " -a " : ""
+    decomposeNonBlockedSubstitutionsOption = params.decompose_non_blocked_substitutions ? " -a " : ""
+    logFile = name + ".normalization.log"
+    sortedVcf00 =  name + ".00.sorted.vcf"
+    atomicVcf01 =  name + ".01.atomic.vcf"
+    biallelicVcf02 =  name + ".02.biallelic.vcf"
+    sortedVcf03 =  name + ".03.sorted.vcf"
+    leftAlignedVcf04 =  name + ".04.left_aligned.vcf"
+    normalizedVcf =  name + ".normalized.vcf"
+    normalizedSnpsVcf =  name + ".normalized.snps.vcf"
+    normalizedIndelsVcf =  name + ".normalized.indels.vcf"
+    normalizedMnvsVcf =  name + ".normalized.mnps.vcf"
+    normalizedRefVcf =  name + ".normalized.ref.vcf"
+    normalizedOtherVcf =  name + ".normalized.other.vcf"
+    normalizedBndVcf =  name + ".normalized.bnd.vcf"
     """
+    # initial sort of the VCF
+    vt sort ${vcf} -o ${sortedVcf00}
+
     # decompose biallelic block substitutions (AC>TG to A>T and C>G)
     # -a: best guess for non blocked substitutions
     # -p: output phased genotypes and PS annotation
-    if (${params.skip_split_mnps} = true) ; then
-      cp $vcf ${vcf.baseName}.atomic.vcf
-      touch ${vcf.baseName}.decompose_blocksub_stats.log
+    if (${params.skip_split_mnps}) ; then
+      cp $sortedVcf00 ${atomicVcf01}
     else
-      vt decompose_blocksub ${vcf} ${decomposeNonBlockedSubstitutions} -p -o ${vcf.baseName}.atomic.vcf 2> ${vcf.baseName}.normalization.log
+      vt decompose_blocksub ${sortedVcf00} ${decomposeNonBlockedSubstitutionsOption} -p -o ${atomicVcf01} 2> ${logFile}
     fi
 
     # decompose multiallelic variants into biallelic (C>T,G to C>T and C>G)
-    vt decompose ${vcf.baseName}.atomic.vcf -o ${vcf.baseName}.biallelic.vcf 2>> ${vcf.baseName}.normalization.log
+    vt decompose ${atomicVcf01} -o ${biallelicVcf02} 2>> ${logFile}
 
     # sort the input VCF
-    vt sort ${vcf.baseName}.biallelic.vcf -o ${vcf.baseName}.sorted.vcf
+    vt sort ${biallelicVcf02} -o ${sortedVcf03}
 
     # normalize variants (trim and left alignment)
-    vt normalize ${vcf.baseName}.sorted.vcf -r ${params.reference} -o ${vcf.baseName}.trimmed_left_aligned.vcf 2>> ${vcf.baseName}.normalization.log
+    vt normalize ${sortedVcf03} -r ${params.reference} -o ${leftAlignedVcf04} 2>> ${logFile}
 
     # removes duplicated variants
-    if (${params.skip_duplication_removal} = false) ; then
-        cp ${vcf.baseName}.trimmed_left_aligned.vcf ${vcf.baseName}.normalized.vcf
+    if (${params.skip_duplication_removal}) ; then
+        cp ${leftAlignedVcf04} ${normalizedVcf}
     else
-        vt uniq ${vcf.baseName}.trimmed_left_aligned.vcf -o ${vcf.baseName}.normalized.vcf 2>> ${vcf.baseName}.normalization.log
+        vt uniq ${leftAlignedVcf04} -o ${normalizedVcf} 2>> ${logFile}
     fi
     
-
     # separate by variant type once normalized
-    if (${params.skip_split_vcf_by_type} = false) ; then
-        bcftools view --types snps -o ${vcf.baseName}.normalized.snps.vcf ${vcf.baseName}.normalized.vcf
-        bcftools view --types indels -o ${vcf.baseName}.normalized.indels.vcf ${vcf.baseName}.normalized.vcf
-        bcftools view --types mnps -o ${vcf.baseName}.normalized.mnps.vcf ${vcf.baseName}.normalized.vcf
-        bcftools view --types ref -o ${vcf.baseName}.normalized.ref.vcf ${vcf.baseName}.normalized.vcf
-        bcftools view --types bnd -o ${vcf.baseName}.normalized.bnd.vcf ${vcf.baseName}.normalized.vcf
-        bcftools view --types other -o ${vcf.baseName}.normalized.other.vcf ${vcf.baseName}.normalized.vcf  
+    if ( ! ${params.skip_split_vcf_by_type}) ; then
+        bcftools view --types snps -o ${normalizedSnpsVcf} ${normalizedVcf}
+        bcftools view --types indels -o ${normalizedIndelsVcf} ${normalizedVcf}
+        bcftools view --types mnps -o ${normalizedMnvsVcf} ${normalizedVcf}
+        bcftools view --types ref -o ${normalizedRefVcf} ${normalizedVcf}
+        bcftools view --types bnd -o ${normalizedBndVcf} ${normalizedVcf}
+        bcftools view --types other -o ${normalizedOtherVcf} ${normalizedVcf}  
     fi
 
     # delete intermediate files
-    rm -f ${vcf.baseName}.atomic.vcf
-    rm -f ${vcf.baseName}.biallelic.vcf
-    rm -f ${vcf.baseName}.sorted.vcf
-    rm -f ${vcf.baseName}.trimmed_left_aligned.vcf
+    rm -f ${atomicVcf01}
+    rm -f ${biallelicVcf02}
+    rm -f ${sortedVcf03}
+    rm -f ${leftAlignedVcf04}
     """
 }
 
