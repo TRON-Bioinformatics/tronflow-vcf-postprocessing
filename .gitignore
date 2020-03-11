@@ -1,0 +1,9 @@
+.idea
+*.swp
+work
+.nextflow
+.nextflow.*
+tests/resources/output*
+tests/resources/input_files*
+venv
+__pycache__
