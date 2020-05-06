@@ -109,7 +109,6 @@ process normalizeVcf {
       file("${name}.normalized.snps.vcf") optional true into normalized_snps_vcf_file
       file("${name}.normalized.indels.vcf") optional true into normalized_indels_vcf_file
       file("${name}.normalized.mnps.vcf") optional true into normalized_mnps_vcf_file
-      file("${name}.normalized.ref.vcf") optional true into normalized_ref_vcf_file
       file("${name}.normalized.bnd.vcf") optional true into normalized_bnd_vcf_file
       file("${name}.normalized.other.vcf") optional true into normalized_other_vcf_file
       file("${name}.normalization.log") into normalization_log
@@ -126,7 +125,6 @@ process normalizeVcf {
     normalizedSnpsVcf =  name + ".normalized.snps.vcf"
     normalizedIndelsVcf =  name + ".normalized.indels.vcf"
     normalizedMnvsVcf =  name + ".normalized.mnps.vcf"
-    normalizedRefVcf =  name + ".normalized.ref.vcf"
     normalizedOtherVcf =  name + ".normalized.other.vcf"
     normalizedBndVcf =  name + ".normalized.bnd.vcf"
     """
@@ -160,10 +158,10 @@ process normalizeVcf {
     
     # separate by variant type once normalized
     if ( ! ${params.skip_split_vcf_by_type}) ; then
-        bcftools view --types snps -o ${normalizedSnpsVcf} ${normalizedVcf}
+        # excludes other than SNP to avoid removing somatic reference variants
+        bcftools view --exclude-types indels,mnps,bnd,other -o ${normalizedSnpsVcf} ${normalizedVcf}
         bcftools view --types indels -o ${normalizedIndelsVcf} ${normalizedVcf}
         bcftools view --types mnps -o ${normalizedMnvsVcf} ${normalizedVcf}
-        bcftools view --types ref -o ${normalizedRefVcf} ${normalizedVcf}
         bcftools view --types bnd -o ${normalizedBndVcf} ${normalizedVcf}
         bcftools view --types other -o ${normalizedOtherVcf} ${normalizedVcf}  
     fi
