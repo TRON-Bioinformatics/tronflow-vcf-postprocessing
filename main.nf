@@ -2,7 +2,7 @@
 
 params.help= false
 params.input_files = false
-params.reference = "/projects/data/gatk_bundle/hg19/ucsc.hg19.fasta"						// TODO: remove this hard coded bit
+params.reference = false
 params.output = false
 params.skip_split_mnps = false
 params.filter = false
@@ -12,32 +12,7 @@ params.skip_split_vcf_by_type = false
 
 def helpMessage() {
     log.info"""
-Usage:
-    nextflow run main.nf --input_files input_files --reference reference.fasta
 
-This workflow implements a VT VCF normalization pipeline (vt v0.5772)
-
-Input:
-    * input_files: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file
-    The input file does not have header!
-    Example input file:
-    sample1	/path/to/your/file.vcf
-    sample2	/path/to/your/file2.vcf
-
-Optional input:
-    * reference: path to the FASTA genome reference (indexes expected *.fai, *.dict) [default: hg19]
-    * output: the folder where to publish output
-    * skip_split_mnps: flag indicating not to split MNPs (overrides --decompose_non_blocked_substitutions)
-    * decompose_non_blocked_substitutions: decomposes indels and SNVs blocked together despite being non deterministic
-    * skip_duplication_removal: flag indicating to skip duplication removal
-    * skip_split_vcf_by_type: flag indicating to skip splitting the VCF by variant type
-    * filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
-
-Output:
-    * Normalized VCF file
-    * One normalized VCF file per variant type (SNPs, MNPs, indels, BND, other)
-    * Tab-separated values file with the absolute paths to the preprocessed BAMs, preprocessed_bams.txt
-    * Summary stats and plots on the VCF
     """
 }
 
@@ -66,8 +41,6 @@ if (params.filter) {
   process filterVcf {
     cpus 1
     memory '4g'
-    //container 'biocontainers/bcftools'
-    module 'anaconda/3/2019'
     tag "${name}"
 
 
@@ -95,8 +68,6 @@ Adds the required read groups fields to the BAM file. The provided type is added
 process normalizeVcf {
     cpus 1
     memory '4g'
-    //container 'biocontainers/bcftools'
-    module 'anaconda/3/2019'
     tag "${name}"
     publishDir "${publish_dir}/${name}", mode: "copy"
 
@@ -137,7 +108,7 @@ process normalizeVcf {
     if (${params.skip_split_mnps}) ; then
       cp $sortedVcf00 ${atomicVcf01}
     else
-      vt decompose_blocksub ${sortedVcf00} ${decomposeNonBlockedSubstitutionsOption} -p -o ${atomicVcf01} 2> ${logFile}
+      vt decompose_blocksub ${sortedVcf00} ${decomposeNonBlockedSubstitutionsOption} -o ${atomicVcf01} 2> ${logFile}
     fi
 
     # decompose multiallelic variants into biallelic (C>T,G to C>T and C>G)
@@ -177,8 +148,6 @@ process normalizeVcf {
 process summaryVcf {
   cpus 1
   memory '4g'
-  //container 'biocontainers/bcftools'
-  module 'anaconda/3/2019'
   tag "${name}"
   publishDir "${publish_dir}/${name}", mode: "copy"
 
@@ -191,7 +160,7 @@ process summaryVcf {
   """
   mkdir -p ${name}_stats
   bcftools stats $vcf > ${name}_stats/${vcf.baseName}.stats
-  plot-vcfstats -p ${name}_stats --no-PDF --title ${name} ${name}_stats/${vcf.baseName}.stats
+  #plot-vcfstats -p ${name}_stats --no-PDF --title ${name} ${name}_stats/${vcf.baseName}.stats
   """
 }
 

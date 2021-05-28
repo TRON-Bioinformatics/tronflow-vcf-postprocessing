@@ -32,9 +32,8 @@ class IntegrationTests(TestCase):
             [self.sample_with_mnvs, self.test_vcf_with_mnvs]
         ])
 
-        self.module_settings_cmd = 'module purge; module load java/11.0.1;'
         workflow = pkg_resources.resource_filename(__name__, "../main.nf")
-        self.nextflow_cmd = "nextflow {workflow} -profile test ".format(workflow=workflow)
+        self.nextflow_cmd = "nextflow {workflow} -profile test,conda ".format(workflow=workflow)
 
     def test_help(self):
         self._run_nextflow(options='--help')
@@ -132,8 +131,8 @@ class IntegrationTests(TestCase):
                          'Unexpected difference in count of variants')
 
     def _run_nextflow(self, options):
-        process = subprocess.Popen(self.module_settings_cmd + self.nextflow_cmd + options,
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        process = subprocess.Popen(
+            self.nextflow_cmd + options, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         stdout, stderr = process.communicate()
         print(stdout.decode("utf-8"))
         print(stderr.decode("utf-8"))

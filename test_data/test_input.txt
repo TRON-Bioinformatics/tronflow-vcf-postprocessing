@@ -1,0 +1,4 @@
+sample1	test_data/test.vcf
+sample2	test_data/test2.vcf
+sample3	test_data/test_with_duplicates.vcf
+sample4	test_data/test_with_mnvs.vcf
