@@ -12,14 +12,9 @@ params.skip_split_vcf_by_type = false
 params.cpus = 1
 params.memory = "4g"
 
-def helpMessage() {
-    log.info"""
-
-    """
-}
 
 if (params.help) {
-    helpMessage()
+    log.info params.help
     exit 0
 }
 

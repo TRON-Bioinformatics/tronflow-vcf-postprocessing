@@ -17,5 +17,5 @@ test:
 check:
 	test -s output/test1/sample1/sample1.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
 	test -s output/test1/sample2/sample2.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
-	test -s output/test1/sample3/sample4.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
+	test -s output/test1/sample3/sample3.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
 	test -s output/test1/sample4/sample4.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
