@@ -9,6 +9,8 @@ params.filter = false
 params.decompose_non_blocked_substitutions = false
 params.skip_duplication_removal = false
 params.skip_split_vcf_by_type = false
+params.cpus = 1
+params.memory = "4g"
 
 def helpMessage() {
     log.info"""
@@ -39,8 +41,8 @@ if (params.input_files) {
 
 if (params.filter) {
   process filterVcf {
-    cpus 1
-    memory '4g'
+    cpus params.cpus
+    memory params.memory
     tag "${name}"
 
 
@@ -66,8 +68,8 @@ This step reorders chromosomes in the BAM file according to the provided referen
 Adds the required read groups fields to the BAM file. The provided type is added to the BAM sample name.
 */
 process normalizeVcf {
-    cpus 1
-    memory '4g'
+    cpus params.cpus
+    memory params.memory
     tag "${name}"
     publishDir "${publish_dir}/${name}", mode: "copy"
 
@@ -144,8 +146,8 @@ process normalizeVcf {
 }
 
 process summaryVcf {
-  cpus 1
-  memory '4g'
+  cpus params.cpus
+  memory params.memory
   tag "${name}"
   publishDir "${publish_dir}/${name}", mode: "copy"
 

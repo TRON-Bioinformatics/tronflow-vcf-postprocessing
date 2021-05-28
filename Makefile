@@ -11,7 +11,6 @@ clean:
 	rm -f .nextflow.log*
 	rm -rf .nextflow*
 
-
 test:
 	nextflow main.nf -profile test,conda --output output/test1 --input_files test_data/test_input.txt
 
