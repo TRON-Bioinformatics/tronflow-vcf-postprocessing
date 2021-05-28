@@ -12,10 +12,20 @@ clean:
 	rm -rf .nextflow*
 
 test:
-	nextflow main.nf -profile test,conda --output output/test1 --input_files test_data/test_input.txt
+	nextflow main.nf -profile test,conda --output output/test1
+	nextflow main.nf -profile test,conda --output output/test2 --filter PASS
+	nextflow main.nf -profile test,conda --output output/test3 --skip_split_mnps
 
 check:
 	test -s output/test1/sample1/sample1.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
 	test -s output/test1/sample2/sample2.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
 	test -s output/test1/sample3/sample3.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
 	test -s output/test1/sample4/sample4.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
+	test -s output/test2/sample1/sample1.normalized.vcf || { echo "Missing test 2 output file!"; exit 1; }
+	test -s output/test2/sample2/sample2.normalized.vcf || { echo "Missing test 2 output file!"; exit 1; }
+	test -s output/test2/sample3/sample3.normalized.vcf || { echo "Missing test 2 output file!"; exit 1; }
+	test -s output/test2/sample4/sample4.normalized.vcf || { echo "Missing test 2 output file!"; exit 1; }
+	test -s output/test3/sample1/sample1.normalized.vcf || { echo "Missing test 3 output file!"; exit 1; }
+	test -s output/test3/sample2/sample2.normalized.vcf || { echo "Missing test 3 output file!"; exit 1; }
+	test -s output/test3/sample3/sample3.normalized.vcf || { echo "Missing test 3 output file!"; exit 1; }
+	test -s output/test3/sample4/sample4.normalized.vcf || { echo "Missing test 3 output file!"; exit 1; }
