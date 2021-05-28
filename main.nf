@@ -82,11 +82,9 @@ process normalizeVcf {
       file("${name}.normalized.mnps.vcf") optional true into normalized_mnps_vcf_file
       file("${name}.normalized.bnd.vcf") optional true into normalized_bnd_vcf_file
       file("${name}.normalized.other.vcf") optional true into normalized_other_vcf_file
-      file("${name}.normalization.log") into normalization_log
 
     script:
     decomposeNonBlockedSubstitutionsOption = params.decompose_non_blocked_substitutions ? " -a " : ""
-    logFile = name + ".normalization.log"
     sortedVcf00 =  name + ".00.sorted.vcf"
     atomicVcf01 =  name + ".01.atomic.vcf"
     biallelicVcf02 =  name + ".02.biallelic.vcf"
@@ -108,23 +106,23 @@ process normalizeVcf {
     if (${params.skip_split_mnps}) ; then
       cp $sortedVcf00 ${atomicVcf01}
     else
-      vt decompose_blocksub ${sortedVcf00} ${decomposeNonBlockedSubstitutionsOption} -o ${atomicVcf01} 2> ${logFile}
+      vt decompose_blocksub ${sortedVcf00} ${decomposeNonBlockedSubstitutionsOption} -o ${atomicVcf01}
     fi
 
     # decompose multiallelic variants into biallelic (C>T,G to C>T and C>G)
-    vt decompose ${atomicVcf01} -o ${biallelicVcf02} 2>> ${logFile}
+    vt decompose ${atomicVcf01} -o ${biallelicVcf02}
 
     # sort the input VCF
     vt sort ${biallelicVcf02} -o ${sortedVcf03}
 
     # normalize variants (trim and left alignment)
-    vt normalize ${sortedVcf03} -r ${params.reference} -o ${leftAlignedVcf04} 2>> ${logFile}
+    vt normalize ${sortedVcf03} -r ${params.reference} -o ${leftAlignedVcf04}
 
     # removes duplicated variants
     if (${params.skip_duplication_removal}) ; then
         cp ${leftAlignedVcf04} ${normalizedVcf}
     else
-        vt uniq ${leftAlignedVcf04} -o ${normalizedVcf} 2>> ${logFile}
+        vt uniq ${leftAlignedVcf04} -o ${normalizedVcf}
     fi
     
     # separate by variant type once normalized
