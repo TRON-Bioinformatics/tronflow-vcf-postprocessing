@@ -5,7 +5,7 @@ params.input_files = false
 params.reference = false
 params.output = false
 params.skip_decompose_complex = false
-params.multiallelics = "-both"
+params.multiallelics = "-any"
 params.filter = false
 params.cpus = 1
 params.memory = "4g"
@@ -69,18 +69,20 @@ process normalizeVcf {
       set name, val("${publish_dir}/${name}/${name}.normalized.vcf") into normalized_vcf
 
     script:
-        decompose_complex = params.skip_decompose_complex ? "" : "--atomize"
-        multiallelics = params.multiallelics ? "--multiallelics ${params.multiallelics}" : ""
+        multiallelics = params.multiallelics ? "--multiallelics ${params.multiallelics} --atom-overlaps ." : ""
+        decompose_complex = params.skip_decompose_complex ? "" : "bcftools norm --atomize ${multiallelics} - |"
     """
     # initial sort of the VCF
     bcftools sort ${vcf} | \
 
     # checks reference genome, decompose multiallelics, trim and left align indels
-    bcftools norm ${decompose_complex} ${multiallelics} --check-ref e --fasta-ref ${params.reference} \
-    --old-rec-tag OLD_VARIANT - | \
+    bcftools norm ${multiallelics} --check-ref e --fasta-ref ${params.reference} --old-rec-tag OLD_VARIANT - | \
+
+    # decompose complex variants
+    ${decompose_complex}
 
     # remove duplicates after normalisation
-    bcftools norm --rm-dup all -o ${name}.normalized.vcf -
+    bcftools norm ${multiallelics} --rm-dup exact -o ${name}.normalized.vcf -
     """
 }
 

@@ -14,18 +14,11 @@ clean:
 test:
 	nextflow main.nf -profile test,conda --output output/test1
 	nextflow main.nf -profile test,conda --output output/test2 --filter PASS
-	nextflow main.nf -profile test,conda --output output/test3 --skip_split_mnps
+	nextflow main.nf -profile test,conda --output output/test3 --skip_decompose_complex
+	nextflow main.nf -profile test,conda --output output/test4 --multiallelics false
 
 check:
 	test -s output/test1/sample1/sample1.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
-	test -s output/test1/sample2/sample2.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
-	test -s output/test1/sample3/sample3.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
-	test -s output/test1/sample4/sample4.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
 	test -s output/test2/sample1/sample1.normalized.vcf || { echo "Missing test 2 output file!"; exit 1; }
-	test -s output/test2/sample2/sample2.normalized.vcf || { echo "Missing test 2 output file!"; exit 1; }
-	test -s output/test2/sample3/sample3.normalized.vcf || { echo "Missing test 2 output file!"; exit 1; }
-	test -s output/test2/sample4/sample4.normalized.vcf || { echo "Missing test 2 output file!"; exit 1; }
 	test -s output/test3/sample1/sample1.normalized.vcf || { echo "Missing test 3 output file!"; exit 1; }
-	test -s output/test3/sample2/sample2.normalized.vcf || { echo "Missing test 3 output file!"; exit 1; }
-	test -s output/test3/sample3/sample3.normalized.vcf || { echo "Missing test 3 output file!"; exit 1; }
-	test -s output/test3/sample4/sample4.normalized.vcf || { echo "Missing test 3 output file!"; exit 1; }
+	test -s output/test4/sample1/sample1.normalized.vcf || { echo "Missing test 4 output file!"; exit 1; }
