@@ -5,7 +5,6 @@ params.input_files = false
 params.reference = false
 params.output = false
 params.skip_decompose_complex = false
-params.multiallelics = "-any"
 params.filter = false
 params.cpus = 1
 params.memory = "4g"
@@ -43,7 +42,7 @@ if (params.filter) {
     	set name, file(vcf) from input_files
 
     output:
-      set name, file("${vcf.baseName}.filtered.vcf") into filtered_vcf
+      set name, file("${vcf.baseName}.filtered.vcf") into filtered_vcf, filtered_vcf_for_stats
 
     """
     # filter variants
@@ -52,7 +51,24 @@ if (params.filter) {
   }
 }
 else {
-  filtered_vcf = input_files
+    input_files.into { filtered_vcf; filtered_vcf_for_stats }
+}
+
+process summaryVcfBefore {
+  cpus params.cpus
+  memory params.memory
+  tag "${name}"
+  publishDir "${publish_dir}/${name}/metrics", mode: "copy"
+
+  input:
+    set name, file(vcf) from filtered_vcf_for_stats
+
+  output:
+    file("${vcf.baseName}.stats*")
+
+  """
+  bcftools stats $vcf > ${vcf.baseName}.stats
+  """
 }
 
 process normalizeVcf {
@@ -69,24 +85,24 @@ process normalizeVcf {
       set name, val("${publish_dir}/${name}/${name}.normalized.vcf") into normalized_vcf
 
     script:
-        multiallelics = params.multiallelics ? "--multiallelics ${params.multiallelics} --atom-overlaps ." : ""
-        decompose_complex = params.skip_decompose_complex ? "" : "bcftools norm --atomize ${multiallelics} - |"
+        decompose_complex = params.skip_decompose_complex ? "" : "bcftools norm --atomize - |"
     """
     # initial sort of the VCF
     bcftools sort ${vcf} | \
 
     # checks reference genome, decompose multiallelics, trim and left align indels
-    bcftools norm ${multiallelics} --check-ref e --fasta-ref ${params.reference} --old-rec-tag OLD_VARIANT - | \
+    bcftools norm --multiallelics -any --atom-overlaps . --check-ref e --fasta-ref ${params.reference} \
+    --old-rec-tag OLD_VARIANT - | \
 
     # decompose complex variants
     ${decompose_complex}
 
     # remove duplicates after normalisation
-    bcftools norm ${multiallelics} --rm-dup exact -o ${name}.normalized.vcf -
+    bcftools norm --rm-dup exact -o ${name}.normalized.vcf -
     """
 }
 
-process summaryVcf {
+process summaryVcfAfter {
   cpus params.cpus
   memory params.memory
   tag "${name}"

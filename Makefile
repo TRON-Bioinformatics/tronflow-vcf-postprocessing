@@ -13,12 +13,10 @@ clean:
 
 test:
 	nextflow main.nf -profile test,conda --output output/test1
-	nextflow main.nf -profile test,conda --output output/test2 --filter PASS
+	nextflow main.nf -profile test,conda --output output/test2 --filter PASS,MNV
 	nextflow main.nf -profile test,conda --output output/test3 --skip_decompose_complex
-	nextflow main.nf -profile test,conda --output output/test4 --multiallelics false
 
 check:
 	test -s output/test1/sample1/sample1.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
 	test -s output/test2/sample1/sample1.normalized.vcf || { echo "Missing test 2 output file!"; exit 1; }
 	test -s output/test3/sample1/sample1.normalized.vcf || { echo "Missing test 3 output file!"; exit 1; }
-	test -s output/test4/sample1/sample1.normalized.vcf || { echo "Missing test 4 output file!"; exit 1; }
