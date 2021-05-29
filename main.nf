@@ -4,9 +4,9 @@ params.help= false
 params.input_files = false
 params.reference = false
 params.output = false
-params.skip_split_mnps = false
+params.skip_decompose_complex = false
+params.multiallelics = "-both"
 params.filter = false
-params.decompose_non_blocked_substitutions = false
 params.cpus = 1
 params.memory = "4g"
 
@@ -55,11 +55,6 @@ else {
   filtered_vcf = input_files
 }
 
-/*
-This step sets MAPQ to 0 for all unmapped reads + avoids soft clipping beyond the end of the reference genome
-This step reorders chromosomes in the BAM file according to the provided reference (this step is required for GATK)
-Adds the required read groups fields to the BAM file. The provided type is added to the BAM sample name.
-*/
 process normalizeVcf {
     cpus params.cpus
     memory params.memory
@@ -74,26 +69,18 @@ process normalizeVcf {
       set name, val("${publish_dir}/${name}/${name}.normalized.vcf") into normalized_vcf
 
     script:
-        decomposeNonBlockedSubstitutionsOption = params.decompose_non_blocked_substitutions ? " -a " : ""
-        normalizedVcf =  name + ".normalized.vcf"
-        decompose_blocksub = params.skip_split_mnps ?
-            "" :
-            "vt decompose_blocksub - ${decomposeNonBlockedSubstitutionsOption} |"
+        decompose_complex = params.skip_decompose_complex ? "" : "--atomize"
+        multiallelics = params.multiallelics ? "--multiallelics ${params.multiallelics}" : ""
     """
     # initial sort of the VCF
-    vt sort ${vcf} | \
-    # decompose biallelic block substitutions (AC>TG to A>T and C>G)
-    # -a: best guess for non blocked substitutions
-    # -p: output phased genotypes and PS annotation
-    ${decompose_blocksub} \
-    # decompose multiallelic variants into biallelic (C>T,G to C>T and C>G)
-    vt decompose - | \
-    # sort the input VCF
-    vt sort - | \
-    # normalize variants (trim and left alignment)
-    vt normalize - -r ${params.reference} | \
-    # removes duplicated variants
-    vt uniq - -o ${normalizedVcf}
+    bcftools sort ${vcf} | \
+
+    # checks reference genome, decompose multiallelics, trim and left align indels
+    bcftools norm ${decompose_complex} ${multiallelics} --check-ref e --fasta-ref ${params.reference} \
+    --old-rec-tag OLD_VARIANT - | \
+
+    # remove duplicates after normalisation
+    bcftools norm --rm-dup all -o ${name}.normalized.vcf -
     """
 }
 
