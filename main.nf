@@ -2,47 +2,16 @@
 
 params.help= false
 params.input_files = false
-params.reference = "/projects/data/gatk_bundle/hg19/ucsc.hg19.fasta"						// TODO: remove this hard coded bit
+params.reference = false
 params.output = false
-params.skip_split_mnps = false
+params.skip_decompose_complex = false
 params.filter = false
-params.decompose_non_blocked_substitutions = false
-params.skip_duplication_removal = false
-params.skip_split_vcf_by_type = false
+params.cpus = 1
+params.memory = "4g"
 
-def helpMessage() {
-    log.info"""
-Usage:
-    nextflow run main.nf --input_files input_files --reference reference.fasta
-
-This workflow implements a VT VCF normalization pipeline (vt v0.5772)
-
-Input:
-    * input_files: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file
-    The input file does not have header!
-    Example input file:
-    sample1	/path/to/your/file.vcf
-    sample2	/path/to/your/file2.vcf
-
-Optional input:
-    * reference: path to the FASTA genome reference (indexes expected *.fai, *.dict) [default: hg19]
-    * output: the folder where to publish output
-    * skip_split_mnps: flag indicating not to split MNPs (overrides --decompose_non_blocked_substitutions)
-    * decompose_non_blocked_substitutions: decomposes indels and SNVs blocked together despite being non deterministic
-    * skip_duplication_removal: flag indicating to skip duplication removal
-    * skip_split_vcf_by_type: flag indicating to skip splitting the VCF by variant type
-    * filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
-
-Output:
-    * Normalized VCF file
-    * One normalized VCF file per variant type (SNPs, MNPs, indels, BND, other)
-    * Tab-separated values file with the absolute paths to the preprocessed BAMs, preprocessed_bams.txt
-    * Summary stats and plots on the VCF
-    """
-}
 
 if (params.help) {
-    helpMessage()
+    log.info params.help
     exit 0
 }
 
@@ -64,10 +33,8 @@ if (params.input_files) {
 
 if (params.filter) {
   process filterVcf {
-    cpus 1
-    memory '4g'
-    //container 'biocontainers/bcftools'
-    module 'anaconda/3/2019'
+    cpus params.cpus
+    memory params.memory
     tag "${name}"
 
 
@@ -75,7 +42,7 @@ if (params.filter) {
     	set name, file(vcf) from input_files
 
     output:
-      set name, file("${vcf.baseName}.filtered.vcf") into filtered_vcf
+      set name, file("${vcf.baseName}.filtered.vcf") into filtered_vcf, filtered_vcf_for_stats
 
     """
     # filter variants
@@ -84,19 +51,29 @@ if (params.filter) {
   }
 }
 else {
-  filtered_vcf = input_files
+    input_files.into { filtered_vcf; filtered_vcf_for_stats }
 }
 
-/*
-This step sets MAPQ to 0 for all unmapped reads + avoids soft clipping beyond the end of the reference genome
-This step reorders chromosomes in the BAM file according to the provided reference (this step is required for GATK)
-Adds the required read groups fields to the BAM file. The provided type is added to the BAM sample name.
-*/
+process summaryVcfBefore {
+  cpus params.cpus
+  memory params.memory
+  tag "${name}"
+  publishDir "${publish_dir}/${name}/metrics", mode: "copy"
+
+  input:
+    set name, file(vcf) from filtered_vcf_for_stats
+
+  output:
+    file("${vcf.baseName}.stats*")
+
+  """
+  bcftools stats $vcf > ${vcf.baseName}.stats
+  """
+}
+
 process normalizeVcf {
-    cpus 1
-    memory '4g'
-    //container 'biocontainers/bcftools'
-    module 'anaconda/3/2019'
+    cpus params.cpus
+    memory params.memory
     tag "${name}"
     publishDir "${publish_dir}/${name}", mode: "copy"
 
@@ -106,92 +83,41 @@ process normalizeVcf {
     output:
       set name, file("${name}.normalized.vcf") into normalized_vcf2
       set name, val("${publish_dir}/${name}/${name}.normalized.vcf") into normalized_vcf
-      file("${name}.normalized.snps.vcf") optional true into normalized_snps_vcf_file
-      file("${name}.normalized.indels.vcf") optional true into normalized_indels_vcf_file
-      file("${name}.normalized.mnps.vcf") optional true into normalized_mnps_vcf_file
-      file("${name}.normalized.bnd.vcf") optional true into normalized_bnd_vcf_file
-      file("${name}.normalized.other.vcf") optional true into normalized_other_vcf_file
-      file("${name}.normalization.log") into normalization_log
 
     script:
-    decomposeNonBlockedSubstitutionsOption = params.decompose_non_blocked_substitutions ? " -a " : ""
-    logFile = name + ".normalization.log"
-    sortedVcf00 =  name + ".00.sorted.vcf"
-    atomicVcf01 =  name + ".01.atomic.vcf"
-    biallelicVcf02 =  name + ".02.biallelic.vcf"
-    sortedVcf03 =  name + ".03.sorted.vcf"
-    leftAlignedVcf04 =  name + ".04.left_aligned.vcf"
-    normalizedVcf =  name + ".normalized.vcf"
-    normalizedSnpsVcf =  name + ".normalized.snps.vcf"
-    normalizedIndelsVcf =  name + ".normalized.indels.vcf"
-    normalizedMnvsVcf =  name + ".normalized.mnps.vcf"
-    normalizedOtherVcf =  name + ".normalized.other.vcf"
-    normalizedBndVcf =  name + ".normalized.bnd.vcf"
+        //decompose_complex = params.skip_decompose_complex ? "" : "bcftools norm --atomize - |"
+        decompose_complex = params.skip_decompose_complex ? "" : "vt decompose_blocksub -a -p - |"
+
     """
     # initial sort of the VCF
-    vt sort ${vcf} -o ${sortedVcf00}
+    bcftools sort ${vcf} | \
 
-    # decompose biallelic block substitutions (AC>TG to A>T and C>G)
-    # -a: best guess for non blocked substitutions
-    # -p: output phased genotypes and PS annotation
-    if (${params.skip_split_mnps}) ; then
-      cp $sortedVcf00 ${atomicVcf01}
-    else
-      vt decompose_blocksub ${sortedVcf00} ${decomposeNonBlockedSubstitutionsOption} -p -o ${atomicVcf01} 2> ${logFile}
-    fi
+    # checks reference genome, decompose multiallelics, trim and left align indels
+    bcftools norm --multiallelics -any --keep-sum AD --check-ref e --fasta-ref ${params.reference} \
+    --old-rec-tag OLD_CLUMPED - | \
 
-    # decompose multiallelic variants into biallelic (C>T,G to C>T and C>G)
-    vt decompose ${atomicVcf01} -o ${biallelicVcf02} 2>> ${logFile}
+    # decompose complex variants
+    ${decompose_complex}
 
-    # sort the input VCF
-    vt sort ${biallelicVcf02} -o ${sortedVcf03}
-
-    # normalize variants (trim and left alignment)
-    vt normalize ${sortedVcf03} -r ${params.reference} -o ${leftAlignedVcf04} 2>> ${logFile}
-
-    # removes duplicated variants
-    if (${params.skip_duplication_removal}) ; then
-        cp ${leftAlignedVcf04} ${normalizedVcf}
-    else
-        vt uniq ${leftAlignedVcf04} -o ${normalizedVcf} 2>> ${logFile}
-    fi
-    
-    # separate by variant type once normalized
-    if ( ! ${params.skip_split_vcf_by_type}) ; then
-        # excludes other than SNP to avoid removing somatic reference variants
-        bcftools view --exclude-types indels,mnps,bnd,other -o ${normalizedSnpsVcf} ${normalizedVcf}
-        bcftools view --types indels -o ${normalizedIndelsVcf} ${normalizedVcf}
-        bcftools view --types mnps -o ${normalizedMnvsVcf} ${normalizedVcf}
-        bcftools view --types bnd -o ${normalizedBndVcf} ${normalizedVcf}
-        bcftools view --types other -o ${normalizedOtherVcf} ${normalizedVcf}  
-    fi
-
-    # delete intermediate files
-    rm -f ${atomicVcf01}
-    rm -f ${biallelicVcf02}
-    rm -f ${sortedVcf03}
-    rm -f ${leftAlignedVcf04}
+    # remove duplicates after normalisation
+    bcftools norm --rm-dup exact -o ${name}.normalized.vcf -
     """
 }
 
-process summaryVcf {
-  cpus 1
-  memory '4g'
-  //container 'biocontainers/bcftools'
-  module 'anaconda/3/2019'
+process summaryVcfAfter {
+  cpus params.cpus
+  memory params.memory
   tag "${name}"
-  publishDir "${publish_dir}/${name}", mode: "copy"
+  publishDir "${publish_dir}/${name}/metrics", mode: "copy"
 
   input:
     set name, file(vcf) from normalized_vcf2
 
   output:
-    file("${name}_stats/*") into vcf_stats_plots
+    file("${vcf.baseName}.stats*")
 
   """
-  mkdir -p ${name}_stats
-  bcftools stats $vcf > ${name}_stats/${vcf.baseName}.stats
-  plot-vcfstats -p ${name}_stats --no-PDF --title ${name} ${name}_stats/${vcf.baseName}.stats
+  bcftools stats $vcf > ${vcf.baseName}.stats
   """
 }
 
