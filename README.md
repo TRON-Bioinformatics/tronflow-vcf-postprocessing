@@ -1,5 +1,7 @@
 # TronFlow variant normalization pipeline
 
+[![DOI](https://zenodo.org/badge/372133189.svg)](https://zenodo.org/badge/latestdoi/372133189)
+
 This pipeline aims at normalizing variants represented in a VCF into the convened normal form as described in Tan et al., 2015. 
 The variant normalization is based on the implementation in vt and bcftools. 
 The pipeline is implemented on the Nextflow framework.
