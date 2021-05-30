@@ -2,9 +2,9 @@
 
 [![DOI](https://zenodo.org/badge/372133189.svg)](https://zenodo.org/badge/latestdoi/372133189)
 
-This pipeline aims at normalizing variants represented in a VCF into the convened normal form as described in Tan et al., 2015. 
-The variant normalization is based on the implementation in vt and bcftools. 
-The pipeline is implemented on the Nextflow framework.
+This pipeline aims at normalizing variants represented in a VCF into the convened normal form as described in Tan 2015. 
+The variant normalization is based on the implementation in vt (Tan 2015) and bcftools (Danecek 2021). 
+The pipeline is implemented on the Nextflow (Di Tommaso 2017) framework.
  
 The pipeline consists of the following steps:
  * Variant filtering (optional)
@@ -18,7 +18,7 @@ The output consists of:
  * Summary statistics before and after normalization
 
 
-![Pipeline](variant_normalization_pipeline.png)
+![Pipeline](images/variant_normalization_pipeline.png)
 
 ## Examples
 
@@ -108,7 +108,7 @@ Same as MNVs this behaviour can de disabled with `--skip_decompose_complex`.
 ## How to run it
 
  ```
- $ nextflow run tron-bioinformatics/tron-variant-normalization -r v1.0.0 --help
+ $ nextflow run tron-bioinformatics/tronflow-variant-normalization --help
  
  TronFlow VCF normalization v${VERSION}
 

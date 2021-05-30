@@ -12,6 +12,7 @@ clean:
 	rm -rf .nextflow*
 
 test:
+	nextflow main.nf --help
 	nextflow main.nf -profile test,conda --output output/test1
 	nextflow main.nf -profile test,conda --output output/test2 --filter PASS,MNV
 	nextflow main.nf -profile test,conda --output output/test3 --skip_decompose_complex

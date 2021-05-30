@@ -11,7 +11,7 @@ params.memory = "4g"
 
 
 if (params.help) {
-    log.info params.help
+    log.info params.help_message
     exit 0
 }
 
