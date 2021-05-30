@@ -7,3 +7,4 @@ channels:
   - defaults
 dependencies:
   - bioconda::bcftools=1.12
+  - bioconda::vt=0.57721

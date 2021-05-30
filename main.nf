@@ -85,14 +85,16 @@ process normalizeVcf {
       set name, val("${publish_dir}/${name}/${name}.normalized.vcf") into normalized_vcf
 
     script:
-        decompose_complex = params.skip_decompose_complex ? "" : "bcftools norm --atomize - |"
+        //decompose_complex = params.skip_decompose_complex ? "" : "bcftools norm --atomize - |"
+        decompose_complex = params.skip_decompose_complex ? "" : "vt decompose_blocksub -a -p - |"
+
     """
     # initial sort of the VCF
     bcftools sort ${vcf} | \
 
     # checks reference genome, decompose multiallelics, trim and left align indels
-    bcftools norm --multiallelics -any --atom-overlaps . --check-ref e --fasta-ref ${params.reference} \
-    --old-rec-tag OLD_VARIANT - | \
+    bcftools norm --multiallelics -any --keep-sum AD --check-ref e --fasta-ref ${params.reference} \
+    --old-rec-tag OLD_CLUMPED - | \
 
     # decompose complex variants
     ${decompose_complex}
