@@ -1,0 +1,38 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="Accept as a confident somatic mutation">
+##FILTER=<ID=NOT_PASSED,Description="whatever">
+##FILTER=<ID=MULTIALLELIC,Description="whatever">
+##FILTER=<ID=UNTRIMMED,Description="whatever">
+##FILTER=<ID=UNALIGNED,Description="whatever">
+##FILTER=<ID=UNALIGNED-UNTRIMMED,Description="whatever">
+##FILTER=<ID=MNV,Description="whatever">
+##FILTER=<ID=MNV-INDEL,Description="whatever">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1,length=249250621,assembly=hg19>
+##contig=<ID=chr2,length=243199373,assembly=hg19>
+##contig=<ID=chr3,length=198022430,assembly=hg19>
+##contig=<ID=chr4,length=191154276,assembly=hg19>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	tumor
+chr1	13082	.	C	A	.	NOT_PASSED		GT	0/1
+chr1	13081	.	A	C	.	NOT_PASSED		GT	0/1
+chr1	13202	.	A	G	.	NOT_PASSED		GT	0/1
+chr1	13201	.	T	G	.	NOT_PASSED		GT	0/1
+chr1	13201	.	T	C	.	PASS		GT	0/1
+chr1	13263	.	T	C	.	PASS		GT	0/1
+chr1	13083	.	A	C	.	PASS		GT	0/1
+chr1	13263	.	TCC	CCC	.	UNTRIMMED		GT	0/1
+chr1	13083	.	AGA	AGC	.	UNTRIMMED		GT	0/1
+chr1	13141	.	C	AAAAAC	.	UNALIGNED		GT	0/1
+chr1	13141	.	CT	AAAAACT	.	UNALIGNED-UNTRIMMED		GT	0/1
+chr1	13141	.	CTGAGG	G	.	UNALIGNED		GT	0/1
+chr1	13141	.	CTGAGG	GG	.	UNALIGNED-UNTRIMMED		GT	0/1
+chr1	13081	.	ACAG	CCAC	.	MNV		GT	0/1
+chr1	13141	.	CTGAGG	ATGAGT	.	MNV		GT	0/1
+chr1	13201	.	TAGCCT	GAGCCC	.	MNV		GT	0/1
+chr1	13261	.	GCTCCT	CCCCCC	.	MNV		GT	0/1
+chr1	13321	.	AGCCCT	CGCC	.	MNV-INDEL		GT	0/1
+chr1	13081	.	ACA	GCAAAAA	.	MNV-INDEL		GT	0/1
+chr1	13204	.	C	G,T	.	MULTIALLELIC		GT	0/1
+chr1	13324	.	C	G,T	.	MULTIALLELIC		GT	1/2
+chr1	13262	.	C	G,T,A	.	MULTIALLELIC		GT	2/3
+chr1	13323	.	C	A,G,T	.	MULTIALLELIC		GT	2/3
