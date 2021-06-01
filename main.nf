@@ -2,6 +2,7 @@
 
 params.help= false
 params.input_files = false
+params.input_vcf = false
 params.reference = false
 params.output = false
 params.skip_decompose_complex = false
@@ -21,15 +22,22 @@ if (params.output) {
   publish_dir = params.output
 }
 
-// checks required inputs
-if (params.input_files) {
+if (! params.input_files && ! params.input_vcf) {
+  exit 1, "Neither --input-files or --input-vcf are provided!"
+}
+else if (params.input_files && params.input_vcf) {
+  exit 1, "Both --input-files and --input-vcf are provided! Please, provide only one."
+}
+else if (params.input_files) {
   Channel
     .fromPath(params.input_files)
     .splitCsv(header: ['name', 'vcf'], sep: "\t")
     .map{ row-> tuple(row.name, file(row.vcf)) }
     .set { input_files }
-} else {
-  exit 1, "Input file not specified!"
+}
+else if (params.input_vcf) {
+  input_vcf = file(params.input_vcf)
+  Channel.fromList([tuple(input_vcf.name.take(input_vcf.name.lastIndexOf('.')), input_vcf)]).set { input_files }
 }
 
 if (params.filter) {

@@ -117,7 +117,8 @@ Usage:
 
 
 Input:
-    * --input_files: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file
+    * --input_vcf: the path to a single VCF to normalize (not compatible with --input_files)
+    * --input_files: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file (not compatible with --input_vcf)
     The input file does not have header!
     Example input file:
     sample1	/path/to/your/file.vcf
