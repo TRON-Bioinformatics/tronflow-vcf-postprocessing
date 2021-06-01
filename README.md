@@ -117,17 +117,18 @@ Usage:
 
 
 Input:
-    * input_files: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file
+    * --input_files: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file
     The input file does not have header!
     Example input file:
     sample1	/path/to/your/file.vcf
     sample2	/path/to/your/file2.vcf
-    * reference: path to the FASTA genome reference (indexes expected *.fai, *.dict)
+    * --reference: path to the FASTA genome reference (indexes expected *.fai, *.dict)
+    * --vcf-without-ad: indicate when the VCFs to normalize do not have the FORMAT/AD annotation
 
 Optional input:
-    * output: the folder where to publish output
-    * skip_decompose_complex: flag indicating not to split complex variants (ie: MNVs and combinations of SNVs and indels)
-    * filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
+    * --output: the folder where to publish output
+    * --skip_decompose_complex: flag indicating not to split complex variants (ie: MNVs and combinations of SNVs and indels)
+    * --filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
 
 Output:
     * Normalized VCF file
