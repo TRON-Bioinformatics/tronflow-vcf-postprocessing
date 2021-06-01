@@ -1,0 +1,1 @@
+sample_no_ad	test_data/test_no_ad.vcf

@@ -2,12 +2,14 @@
 
 params.help= false
 params.input_files = false
+params.input_vcf = false
 params.reference = false
 params.output = false
 params.skip_decompose_complex = false
 params.filter = false
 params.cpus = 1
 params.memory = "4g"
+params.vcf_without_ad = false
 
 
 if (params.help) {
@@ -20,15 +22,22 @@ if (params.output) {
   publish_dir = params.output
 }
 
-// checks required inputs
-if (params.input_files) {
+if (! params.input_files && ! params.input_vcf) {
+  exit 1, "Neither --input-files or --input-vcf are provided!"
+}
+else if (params.input_files && params.input_vcf) {
+  exit 1, "Both --input-files and --input-vcf are provided! Please, provide only one."
+}
+else if (params.input_files) {
   Channel
     .fromPath(params.input_files)
     .splitCsv(header: ['name', 'vcf'], sep: "\t")
     .map{ row-> tuple(row.name, file(row.vcf)) }
     .set { input_files }
-} else {
-  exit 1, "Input file not specified!"
+}
+else if (params.input_vcf) {
+  input_vcf = file(params.input_vcf)
+  Channel.fromList([tuple(input_vcf.name.take(input_vcf.name.lastIndexOf('.')), input_vcf)]).set { input_files }
 }
 
 if (params.filter) {
@@ -87,13 +96,13 @@ process normalizeVcf {
     script:
         //decompose_complex = params.skip_decompose_complex ? "" : "bcftools norm --atomize - |"
         decompose_complex = params.skip_decompose_complex ? "" : "vt decompose_blocksub -a -p - |"
-
+        keep_ad_sum = params.vcf_without_ad ? "--keep-sum AD" : ""
     """
     # initial sort of the VCF
     bcftools sort ${vcf} | \
 
     # checks reference genome, decompose multiallelics, trim and left align indels
-    bcftools norm --multiallelics -any --keep-sum AD --check-ref e --fasta-ref ${params.reference} \
+    bcftools norm --multiallelics -any ${keep_ad_sum} --check-ref e --fasta-ref ${params.reference} \
     --old-rec-tag OLD_CLUMPED - | \
 
     # decompose complex variants
