@@ -1,6 +1,9 @@
 # TronFlow variant normalization pipeline
 
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/release/tron-bioinformatics/tronflow-variant-normalization?sort=semver)
 [![DOI](https://zenodo.org/badge/372133189.svg)](https://zenodo.org/badge/latestdoi/372133189)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
+[![Powered by Nextflow](https://img.shields.io/badge/powered%20by-Nextflow-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://www.nextflow.io/)
 
 This pipeline aims at normalizing variants represented in a VCF into the convened normal form as described in Tan 2015. 
 The variant normalization is based on the implementation in vt (Tan 2015) and bcftools (Danecek 2021). 
