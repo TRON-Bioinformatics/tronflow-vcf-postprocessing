@@ -136,7 +136,7 @@ Optional input:
 
 Output:
     * Normalized VCF file
-    * Tab-separated values file with the absolute paths to the preprocessed BAMs, preprocessed_bams.txt
+    * Tab-separated values file with the absolute paths to the normalized VCF files, normalized_vcfs.txt
     * Summary statistics before and after normalization
  ```
  
