@@ -30,7 +30,7 @@ process NORMALIZE_VCF {
     --old-rec-tag OLD_CLUMPED - | \
 
     # decompose complex variants
-    ${decompose_complex}
+    #${decompose_complex}
 
     # remove duplicates after normalisation
     bcftools norm --rm-dup exact -o ${name}.normalized.vcf -

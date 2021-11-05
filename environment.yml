@@ -6,5 +6,6 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - bioconda::bcftools=1.12
-  - bioconda::vt=0.57721
+  - conda-forge::xz=5.2.5
+  - bioconda::bcftools=1.14
+  - bioconda::vafator=0.4.0
