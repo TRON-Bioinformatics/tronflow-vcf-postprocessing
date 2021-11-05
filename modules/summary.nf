@@ -1,6 +1,6 @@
 params.cpus = 1
 params.memory = "4g"
-params.output = "."
+params.output = "output"
 
 
 process SUMMARY_VCF {

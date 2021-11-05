@@ -1,6 +1,7 @@
 params.cpus = 1
 params.memory = "4g"
-params.output = "."
+params.output = "output"
+params.filter = false
 
 
 process FILTER_VCF {

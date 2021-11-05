@@ -1,13 +1,15 @@
 params.cpus = 1
 params.memory = "4g"
-params.output = "."
+params.output = "output"
+params.skip_decompose_complex = false
+params.vcf_without_ad = false
 
 
 process NORMALIZE_VCF {
     cpus params.cpus
     memory params.memory
     tag "${name}"
-    publishDir "${publish_dir}/${name}", mode: "copy"
+    publishDir "${params.output}/${name}", mode: "copy"
 
     input:
     	tuple val(name), file(vcf)
