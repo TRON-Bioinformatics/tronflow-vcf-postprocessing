@@ -1,10 +1,16 @@
 #!/usr/bin/env nextflow
 
+nextflow.enable.dsl = 2
+
+include { NORMALIZE_VCF } from './modules/normalization'
+include { FILTER_VCF } from './modules/filter'
+include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/summary'
+
 params.help= false
 params.input_files = false
 params.input_vcf = false
 params.reference = false
-params.output = false
+params.output = "output"
 params.skip_decompose_complex = false
 params.filter = false
 params.cpus = 1
@@ -15,11 +21,6 @@ params.vcf_without_ad = false
 if (params.help) {
     log.info params.help_message
     exit 0
-}
-
-publish_dir = "output"
-if (params.output) {
-  publish_dir = params.output
 }
 
 if (! params.input_files && ! params.input_vcf) {
@@ -40,96 +41,16 @@ else if (params.input_vcf) {
   Channel.fromList([tuple(input_vcf.name.take(input_vcf.name.lastIndexOf('.')), input_vcf)]).set { input_files }
 }
 
-if (params.filter) {
-  process filterVcf {
-    cpus params.cpus
-    memory params.memory
-    tag "${name}"
-
-
-    input:
-    	set name, file(vcf) from input_files
-
-    output:
-      set name, file("${vcf.baseName}.filtered.vcf") into filtered_vcf, filtered_vcf_for_stats
-
-    """
-    # filter variants
-    bcftools view --apply-filter ${params.filter} -o ${vcf.baseName}.filtered.vcf ${vcf}
-    """
-  }
-}
-else {
-    input_files.into { filtered_vcf; filtered_vcf_for_stats }
+workflow {
+    if (params.filter) {
+        FILTER_VCF(input_files)
+        input_files = FILTER_VCF.out.filtered_vcfs
+    }
+    SUMMARY_VCF(input_files)
+    NORMALIZE_VCF(input_files)
+    SUMMARY_VCF_2(NORMALIZE_VCF.out.normalized_vcfs)
+    NORMALIZE_VCF.out.normalized_vcfs
+        .map {it.join("\t")}
+        .collectFile(name: "${params.output}/normalized_vcfs.txt", newLine: true)
 }
 
-process summaryVcfBefore {
-  cpus params.cpus
-  memory params.memory
-  tag "${name}"
-  publishDir "${publish_dir}/${name}/metrics", mode: "copy"
-
-  input:
-    set name, file(vcf) from filtered_vcf_for_stats
-
-  output:
-    file("${vcf.baseName}.stats*")
-
-  """
-  bcftools stats $vcf > ${vcf.baseName}.stats
-  """
-}
-
-process normalizeVcf {
-    cpus params.cpus
-    memory params.memory
-    tag "${name}"
-    publishDir "${publish_dir}/${name}", mode: "copy"
-
-    input:
-    	set name, file(vcf) from filtered_vcf
-
-    output:
-      set name, file("${name}.normalized.vcf") into normalized_vcf2
-      set name, val("${publish_dir}/${name}/${name}.normalized.vcf") into normalized_vcf
-
-    script:
-        //decompose_complex = params.skip_decompose_complex ? "" : "bcftools norm --atomize - |"
-        decompose_complex = params.skip_decompose_complex ? "" : "vt decompose_blocksub -a -p - |"
-        keep_ad_sum = params.vcf_without_ad ? "--keep-sum AD" : ""
-    """
-    # initial sort of the VCF
-    bcftools sort ${vcf} | \
-
-    # checks reference genome, decompose multiallelics, trim and left align indels
-    bcftools norm --multiallelics -any ${keep_ad_sum} --check-ref e --fasta-ref ${params.reference} \
-    --old-rec-tag OLD_CLUMPED - | \
-
-    # decompose complex variants
-    ${decompose_complex}
-
-    # remove duplicates after normalisation
-    bcftools norm --rm-dup exact -o ${name}.normalized.vcf -
-    """
-}
-
-process summaryVcfAfter {
-  cpus params.cpus
-  memory params.memory
-  tag "${name}"
-  publishDir "${publish_dir}/${name}/metrics", mode: "copy"
-
-  input:
-    set name, file(vcf) from normalized_vcf2
-
-  output:
-    file("${vcf.baseName}.stats*")
-
-  """
-  bcftools stats $vcf > ${vcf.baseName}.stats
-  """
-}
-
-normalized_vcf
-	.map {it.join("\t")}
-	.collectFile(name: "${publish_dir}/normalized_vcfs.txt", newLine: true)
