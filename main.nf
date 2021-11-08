@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-include { NORMALIZE_VCF } from './modules/normalization'
+include { NORMALIZE_VCF; DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modules/normalization'
 include { FILTER_VCF } from './modules/filter'
 include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/summary'
 include { VAFATOR; MULTIALLELIC_FILTER } from './modules/vafator'
@@ -63,7 +63,15 @@ workflow {
     }
 
     SUMMARY_VCF(input_vcfs)
+
     final_vcfs = NORMALIZE_VCF(input_vcfs)
+    if (! params.skip_decompose_complex) {
+        DECOMPOSE_COMPLEX(final_vcfs)
+        final_vcfs = DECOMPOSE_COMPLEX.out.decomposed_vcfs
+    }
+    REMOVE_DUPLICATES(final_vcfs)
+    final_vcfs = REMOVE_DUPLICATES.out.deduplicated_vcfs
+
     SUMMARY_VCF_2(final_vcfs)
 
     if ( params.input_bams) {
