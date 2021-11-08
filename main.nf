@@ -56,20 +56,22 @@ if (params.input_bams) {
 }
 
 workflow {
+
     if (params.filter) {
         FILTER_VCF(input_vcfs)
         input_vcfs = FILTER_VCF.out.filtered_vcfs
     }
+
     SUMMARY_VCF(input_vcfs)
     final_vcfs = NORMALIZE_VCF(input_vcfs)
     SUMMARY_VCF_2(final_vcfs)
 
     if ( params.input_bams) {
-        if ( params.skip_multiallelic_filter ) {
-            final_vcfs = VAFATOR(final_vcfs.join(input_bams))
-        }
-        else {
-            final_vcfs = MULTIALLELIC_FILTER(VAFATOR(final_vcfs.join(input_bams)))
+        VAFATOR(final_vcfs.join(input_bams))
+        final_vcfs = VAFATOR.out.annotated_vcf
+        if ( ! params.skip_multiallelic_filter ) {
+            final_vcfs = MULTIALLELIC_FILTER(final_vcfs)
+            final_vcfs = MULTIALLELIC_FILTER.out.filtered_vcf
         }
     }
 

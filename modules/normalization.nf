@@ -11,6 +11,8 @@ process NORMALIZE_VCF {
     tag "${name}"
     publishDir "${params.output}/${name}", mode: "copy"
 
+    conda (params.enable_conda ? "bioconda::bcftools=1.14 bioconda::vt=0.57721" : null)
+
     input:
     	tuple val(name), file(vcf)
 
@@ -30,7 +32,7 @@ process NORMALIZE_VCF {
     --old-rec-tag OLD_CLUMPED - | \
 
     # decompose complex variants
-    #${decompose_complex}
+    ${decompose_complex}
 
     # remove duplicates after normalisation
     bcftools norm --rm-dup exact -o ${name}.normalized.vcf -

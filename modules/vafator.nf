@@ -13,11 +13,13 @@ process VAFATOR {
     tag "${name}"
     publishDir "${params.output}/${name}", mode: "copy"
 
+    conda (params.enable_conda ? "bioconda::vafator=0.4.0" : null)
+
     input:
     tuple val(name), file(vcf), val(normal_bams), val(tumor_bams)
 
     output:
-    tuple val("${name}"), file("${vcf.baseName}.vaf.vcf"), emit: annotated_vcf
+    tuple val(name), file("${vcf.baseName}.vaf.vcf"), emit: annotated_vcf
 
     script:
     normal_bams_param = normal_bams?.trim() ? "--normal-bams " + normal_bams.split(",").join(" ") : ""
@@ -39,11 +41,13 @@ process MULTIALLELIC_FILTER {
     tag "${name}"
     publishDir "${params.output}/${name}", mode: "copy"
 
+    conda (params.enable_conda ? "bioconda::vafator=0.4.0" : null)
+
     input:
     tuple val(name), file(vcf)
 
     output:
-    file("${vcf.baseName}.filtered_multiallelics.vcf") //, emit: filtered_vcf
+    tuple val(name), file("${vcf.baseName}.filtered_multiallelics.vcf"), emit: filtered_vcf
 
     script:
     """
