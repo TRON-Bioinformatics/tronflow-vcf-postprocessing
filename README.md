@@ -7,7 +7,10 @@
 [![Powered by Nextflow](https://img.shields.io/badge/powered%20by-Nextflow-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://www.nextflow.io/)
 
 The TronFlow variant normalization pipeline is part of a collection of computational workflows for tumor-normal pair 
-somatic variant calling. Find its documentation here https://tronflow-docs.readthedocs.io
+somatic variant calling. 
+
+Find the documentation here [![Documentation Status](https://readthedocs.org/projects/tronflow-docs/badge/?version=latest)](https://tronflow-docs.readthedocs.io/en/latest/?badge=latest)
+      
 
 This pipeline aims at normalizing variants represented in a VCF into the convened normal form as described in Tan 2015. 
 The variant normalization is based on the implementation in vt (Tan 2015) and bcftools (Danecek 2021). 
