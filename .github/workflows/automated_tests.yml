@@ -15,6 +15,7 @@ jobs:
     - uses: conda-incubator/setup-miniconda@v2
       with:
         auto-update-conda: true
+        channels: conda-forge,bioconda
     - name: Install dependencies
       run: |
         apt-get update && apt-get --assume-yes install wget make procps software-properties-common
