@@ -121,6 +121,17 @@ Same as MNVs this behaviour can de disabled with `--skip_decompose_complex`.
 
 ## How to run it
 
+Run it from GitHub as follows:
+```
+nextflow run tron-bioinformatics/tronflow-variant-normalization -r v2.0.0 -profile conda --input_vcfs input_vcfs --reference reference.fasta
+```
+
+Otherwise download the project and run as follows:
+```
+nextflow main.nf -profile conda  --input_vcfs input_vcfs --reference reference.fasta
+```
+
+Find the help as follows:
  ```
  $ nextflow run tron-bioinformatics/tronflow-variant-normalization --help
  
