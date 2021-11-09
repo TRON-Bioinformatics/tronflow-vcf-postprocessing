@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-include { NORMALIZE_VCF; DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modules/normalization'
+include { BCFTOOLS_NORM; VT_DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modules/normalization'
 include { FILTER_VCF } from './modules/filter'
 include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/summary'
 include { VAFATOR; MULTIALLELIC_FILTER } from './modules/vafator'
