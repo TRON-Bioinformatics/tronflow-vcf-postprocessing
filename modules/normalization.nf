@@ -4,7 +4,7 @@ params.output = "output"
 params.vcf_without_ad = false
 
 
-process NORMALIZE_VCF {
+process BCFTOOLS_NORM {
     cpus params.cpus
     memory params.memory
     tag "${name}"
@@ -29,7 +29,7 @@ process NORMALIZE_VCF {
     """
 }
 
-process DECOMPOSE_COMPLEX {
+process VT_DECOMPOSE_COMPLEX {
     cpus params.cpus
     memory params.memory
     tag "${name}"
