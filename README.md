@@ -6,6 +6,9 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
 [![Powered by Nextflow](https://img.shields.io/badge/powered%20by-Nextflow-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://www.nextflow.io/)
 
+The TronFlow variant normalization pipeline is part of a collection of computational workflows for tumor-normal pair 
+somatic variant calling. Find its documentation here https://tronflow-docs.readthedocs.io
+
 This pipeline aims at normalizing variants represented in a VCF into the convened normal form as described in Tan 2015. 
 The variant normalization is based on the implementation in vt (Tan 2015) and bcftools (Danecek 2021). 
 The pipeline is implemented on the Nextflow (Di Tommaso 2017) framework.
@@ -16,6 +19,9 @@ The pipeline consists of the following steps:
  * Decomposition of multiallelic variants into biallelic variants (ie: A > C,G is decomposed into two variants A > C and A > G)
  * Trim redundant sequence and left align indels, indels in repetitive sequences can have multiple representations
  * Remove duplicated variants
+
+Optionally if BAM files are provided (through `--bam_files`) VCFs are annotated with allele frequencies and depth of 
+coverage by Vafator (https://github.com/TRON-Bioinformatics/vafator). 
  
 The output consists of:
  * The normalized VCF
@@ -24,7 +30,8 @@ The output consists of:
 
 ![Pipeline](images/variant_normalization_pipeline.png)
 
-## Examples
+
+## What is variant normalization?
 
 ### Variants are trimmed removing redundant bases
 
@@ -117,12 +124,12 @@ Same as MNVs this behaviour can de disabled with `--skip_decompose_complex`.
  TronFlow VCF normalization v${VERSION}
 
 Usage:
-    nextflow run main.nf --input_files input_files --reference reference.fasta
+    nextflow run main.nf --input_vcfs input_vcfs --reference reference.fasta
 
 
 Input:
     * --input_vcf: the path to a single VCF to normalize (not compatible with --input_files)
-    * --input_files: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file (not compatible with --input_vcf)
+    * --input_vcfs: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file (not compatible with --input_vcf)
     The input file does not have header!
     Example input file:
     sample1	/path/to/your/file.vcf
@@ -134,12 +141,30 @@ Optional input:
     * --output: the folder where to publish output
     * --skip_decompose_complex: flag indicating not to split complex variants (ie: MNVs and combinations of SNVs and indels)
     * --filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
+    * --input_bams: a tab-separated values file containing in each row the sample name, tumor and normal BAM files for annotation with Vafator
 
 Output:
     * Normalized VCF file
     * Tab-separated values file with the absolute paths to the normalized VCF files, normalized_vcfs.txt
     * Summary statistics before and after normalization
  ```
+
+### Input tables
+
+The table with VCF files expects two tab-separated columns without a header
+
+| Sample name          | VCF                                                             |
+|----------------------|------------------------------------------------------------------------|
+| sample_1             | /path/to/sample_1.vcf               |
+| sample_2             | /path/to/sample_2.vcf                    |
+
+The optional table with BAM files expects three tab-separated columns without a header. Multiple comma-separated BAMs can be provided.
+
+| Sample name          | Tumor BAMs                      | Normal BAMs                  |
+|----------------------|---------------------------------|------------------------------|
+| sample_1             | /path/to/sample_1.tumor_1.bam,/path/to/sample_1.tumor_2.bam      |    /path/to/sample_1.normal_1.bam,/path/to/sample_1.normal_2.bam   |
+| sample_2             | /path/to/sample_2.tumor.bam           |  /path/to/sample_2.normal.bam  |
+
  
 
 ## References

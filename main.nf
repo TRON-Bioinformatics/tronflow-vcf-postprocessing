@@ -64,10 +64,10 @@ workflow {
 
     SUMMARY_VCF(input_vcfs)
 
-    final_vcfs = NORMALIZE_VCF(input_vcfs)
+    final_vcfs = BCFTOOLS_NORM(input_vcfs)
     if (! params.skip_decompose_complex) {
-        DECOMPOSE_COMPLEX(final_vcfs)
-        final_vcfs = DECOMPOSE_COMPLEX.out.decomposed_vcfs
+        VT_DECOMPOSE_COMPLEX(final_vcfs)
+        final_vcfs = VT_DECOMPOSE_COMPLEX.out.decomposed_vcfs
     }
     REMOVE_DUPLICATES(final_vcfs)
     final_vcfs = REMOVE_DUPLICATES.out.deduplicated_vcfs
