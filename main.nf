@@ -1,15 +1,27 @@
 #!/usr/bin/env nextflow
 
+nextflow.enable.dsl = 2
+
+include { BCFTOOLS_NORM; VT_DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modules/normalization'
+include { FILTER_VCF } from './modules/filter'
+include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/summary'
+include { VAFATOR; MULTIALLELIC_FILTER } from './modules/vafator'
+
 params.help= false
-params.input_files = false
+params.input_vcfs = false
+params.input_bams = false
 params.input_vcf = false
 params.reference = false
-params.output = false
+params.output = "output"
 params.skip_decompose_complex = false
 params.filter = false
 params.cpus = 1
 params.memory = "4g"
 params.vcf_without_ad = false
+params.mapping_quality = false
+params.base_call_quality = false
+params.skip_multiallelic_filter = false
+params.prefix = false
 
 
 if (params.help) {
@@ -17,119 +29,60 @@ if (params.help) {
     exit 0
 }
 
-publish_dir = "output"
-if (params.output) {
-  publish_dir = params.output
+if (! params.input_vcfs && ! params.input_vcf) {
+  exit 1, "Neither --input_vcfs or --input_vcf are provided!"
 }
-
-if (! params.input_files && ! params.input_vcf) {
-  exit 1, "Neither --input-files or --input-vcf are provided!"
+else if (params.input_vcfs && params.input_vcf) {
+  exit 1, "Both --input_vcfs and --input_vcf are provided! Please, provide only one."
 }
-else if (params.input_files && params.input_vcf) {
-  exit 1, "Both --input-files and --input-vcf are provided! Please, provide only one."
-}
-else if (params.input_files) {
+else if (params.input_vcfs) {
   Channel
-    .fromPath(params.input_files)
+    .fromPath(params.input_vcfs)
     .splitCsv(header: ['name', 'vcf'], sep: "\t")
     .map{ row-> tuple(row.name, file(row.vcf)) }
-    .set { input_files }
+    .set{ input_vcfs }
 }
 else if (params.input_vcf) {
   input_vcf = file(params.input_vcf)
-  Channel.fromList([tuple(input_vcf.name.take(input_vcf.name.lastIndexOf('.')), input_vcf)]).set { input_files }
+  Channel.fromList( [ tuple( input_vcf.name.take( input_vcf.name.lastIndexOf('.') ), input_vcf) ] ).set { input_vcfs }
 }
 
-if (params.filter) {
-  process filterVcf {
-    cpus params.cpus
-    memory params.memory
-    tag "${name}"
-
-
-    input:
-    	set name, file(vcf) from input_files
-
-    output:
-      set name, file("${vcf.baseName}.filtered.vcf") into filtered_vcf, filtered_vcf_for_stats
-
-    """
-    # filter variants
-    bcftools view --apply-filter ${params.filter} -o ${vcf.baseName}.filtered.vcf ${vcf}
-    """
-  }
-}
-else {
-    input_files.into { filtered_vcf; filtered_vcf_for_stats }
+if (params.input_bams) {
+    Channel
+    .fromPath(params.input_bams)
+    .splitCsv(header: ['name', 'tumor_bams', 'normal_bams'], sep: "\t")
+    .map{ row-> tuple(row.name, row.tumor_bams, row.normal_bams) }
+    .set { input_bams }
 }
 
-process summaryVcfBefore {
-  cpus params.cpus
-  memory params.memory
-  tag "${name}"
-  publishDir "${publish_dir}/${name}/metrics", mode: "copy"
+workflow {
 
-  input:
-    set name, file(vcf) from filtered_vcf_for_stats
+    if (params.filter) {
+        FILTER_VCF(input_vcfs)
+        input_vcfs = FILTER_VCF.out.filtered_vcfs
+    }
 
-  output:
-    file("${vcf.baseName}.stats*")
+    SUMMARY_VCF(input_vcfs)
 
-  """
-  bcftools stats $vcf > ${vcf.baseName}.stats
-  """
+    final_vcfs = BCFTOOLS_NORM(input_vcfs)
+    if (! params.skip_decompose_complex) {
+        VT_DECOMPOSE_COMPLEX(final_vcfs)
+        final_vcfs = VT_DECOMPOSE_COMPLEX.out.decomposed_vcfs
+    }
+    REMOVE_DUPLICATES(final_vcfs)
+    final_vcfs = REMOVE_DUPLICATES.out.deduplicated_vcfs
+
+    SUMMARY_VCF_2(final_vcfs)
+
+    if ( params.input_bams) {
+        VAFATOR(final_vcfs.join(input_bams))
+        final_vcfs = VAFATOR.out.annotated_vcf
+        if ( ! params.skip_multiallelic_filter ) {
+            final_vcfs = MULTIALLELIC_FILTER(final_vcfs)
+            final_vcfs = MULTIALLELIC_FILTER.out.filtered_vcf
+        }
+    }
+
+    final_vcfs.map {it.join("\t")}.collectFile(name: "${params.output}/normalized_vcfs.txt", newLine: true)
 }
 
-process normalizeVcf {
-    cpus params.cpus
-    memory params.memory
-    tag "${name}"
-    publishDir "${publish_dir}/${name}", mode: "copy"
-
-    input:
-    	set name, file(vcf) from filtered_vcf
-
-    output:
-      set name, file("${name}.normalized.vcf") into normalized_vcf2
-      set name, val("${publish_dir}/${name}/${name}.normalized.vcf") into normalized_vcf
-
-    script:
-        //decompose_complex = params.skip_decompose_complex ? "" : "bcftools norm --atomize - |"
-        decompose_complex = params.skip_decompose_complex ? "" : "vt decompose_blocksub -a -p - |"
-        keep_ad_sum = params.vcf_without_ad ? "--keep-sum AD" : ""
-    """
-    # initial sort of the VCF
-    bcftools sort ${vcf} | \
-
-    # checks reference genome, decompose multiallelics, trim and left align indels
-    bcftools norm --multiallelics -any ${keep_ad_sum} --check-ref e --fasta-ref ${params.reference} \
-    --old-rec-tag OLD_CLUMPED - | \
-
-    # decompose complex variants
-    ${decompose_complex}
-
-    # remove duplicates after normalisation
-    bcftools norm --rm-dup exact -o ${name}.normalized.vcf -
-    """
-}
-
-process summaryVcfAfter {
-  cpus params.cpus
-  memory params.memory
-  tag "${name}"
-  publishDir "${publish_dir}/${name}/metrics", mode: "copy"
-
-  input:
-    set name, file(vcf) from normalized_vcf2
-
-  output:
-    file("${vcf.baseName}.stats*")
-
-  """
-  bcftools stats $vcf > ${vcf.baseName}.stats
-  """
-}
-
-normalized_vcf
-	.map {it.join("\t")}
-	.collectFile(name: "${publish_dir}/normalized_vcfs.txt", newLine: true)
