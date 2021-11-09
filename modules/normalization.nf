@@ -9,7 +9,7 @@ process NORMALIZE_VCF {
     memory params.memory
     tag "${name}"
 
-    conda (params.enable_conda ? "bioconda::bcftools=1.12" : null)
+    conda (params.enable_conda ? "bioconda::bcftools=1.14" : null)
 
     input:
     	tuple val(name), file(vcf)
