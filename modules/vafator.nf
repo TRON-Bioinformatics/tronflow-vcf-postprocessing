@@ -4,7 +4,6 @@ params.output = ""
 params.mapping_quality = false
 params.base_call_quality = false
 params.skip_multiallelic_filter = false
-params.prefix = false
 
 
 process VAFATOR {
@@ -13,7 +12,7 @@ process VAFATOR {
     tag "${name}"
     publishDir "${params.output}/${name}", mode: "copy"
 
-    conda (params.enable_conda ? "bioconda::vafator=0.4.0" : null)
+    conda (params.enable_conda ? "bioconda::vafator=1.1.0" : null)
 
     input:
     tuple val(name), file(vcf), val(normal_bams), val(tumor_bams)
@@ -26,11 +25,10 @@ process VAFATOR {
     tumor_bams_param = tumor_bams?.trim() ? "--tumor-bams " + tumor_bams.split(",").join(" ") : ""
     mq_param = params.mapping_quality ? "--mapping-quality " + params.mapping_quality : ""
     bq_param = params.base_call_quality ? "--base-call-quality " + params.base_call_quality : ""
-    prefix_param = params.prefix ? "--prefix " + params.prefix : ""
     """
     vafator \
     --input-vcf ${vcf} \
-    --output-vcf ${vcf.baseName}.vaf.vcf ${normal_bams_param} ${tumor_bams_param} ${mq_param} ${bq_param} ${prefix_param}
+    --output-vcf ${vcf.baseName}.vaf.vcf ${normal_bams_param} ${tumor_bams_param} ${mq_param} ${bq_param}
     """
 }
 
