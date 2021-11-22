@@ -1,7 +1,7 @@
 # TronFlow VCF postprocessing
 
-![GitHub tag (latest SemVer)](https://img.shields.io/github/v/release/tron-bioinformatics/tronflow-variant-normalization?sort=semver)
-[![Run tests](https://github.com/TRON-Bioinformatics/tronflow-variant-normalization/actions/workflows/automated_tests.yml/badge.svg?branch=master)](https://github.com/TRON-Bioinformatics/tronflow-variant-normalization/actions/workflows/automated_tests.yml)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/release/tron-bioinformatics/tronflow-vcf-postprocessing?sort=semver)
+[![Run tests](https://github.com/TRON-Bioinformatics/tronflow-vcf-postprocessing/actions/workflows/automated_tests.yml/badge.svg?branch=master)](https://github.com/TRON-Bioinformatics/tronflow-vcf-postprocessing/actions/workflows/automated_tests.yml)
 [![DOI](https://zenodo.org/badge/372133189.svg)](https://zenodo.org/badge/latestdoi/372133189)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
 [![Powered by Nextflow](https://img.shields.io/badge/powered%20by-Nextflow-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://www.nextflow.io/)
@@ -17,6 +17,78 @@ This pipeline has several objectives:
 * Variant normalization
 * Technical annotations from different BAM files
 * Functional annotations
+
+## How to run it
+
+Run it from GitHub as follows:
+```
+nextflow run tron-bioinformatics/tronflow-vcf-postprocessing -r v2.1.0 -profile conda --input_vcfs input_vcfs --reference reference.fasta
+```
+
+Otherwise download the project and run as follows:
+```
+nextflow main.nf -profile conda  --input_vcfs input_vcfs --reference reference.fasta
+```
+
+Find the help as follows:
+ ```
+ $ nextflow run tron-bioinformatics/tronflow-vcf-postprocessing --help
+ 
+ TronFlow VCF normalization v${VERSION}
+
+Usage:
+    nextflow run main.nf --input_vcfs input_vcfs --reference reference.fasta
+
+
+Input:
+    * --input_vcf: the path to a single VCF to normalize (not compatible with --input_files)
+    * --input_vcfs: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file (not compatible with --input_vcf)
+    The input file does not have header!
+    Example input file:
+    sample1	/path/to/your/file.vcf
+    sample2	/path/to/your/file2.vcf
+    * --reference: path to the FASTA genome reference (indexes expected *.fai, *.dict)
+    * --vcf-without-ad: indicate when the VCFs to normalize do not have the FORMAT/AD annotation
+
+Optional input:
+    * --output: the folder where to publish output
+    * --skip_decompose_complex: flag indicating not to split complex variants (ie: MNVs and combinations of SNVs and indels)
+    * --filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
+    * --input_bams: a tab-separated values file containing in each row the sample name, tumor and normal BAM files for annotation with Vafator
+    * --snpeff_organism: the SnpEff organism name (eg: hg19, hg38, GRCh37.75, GRCh38.99)
+    * --snpeff_datadir: the SnpEff data folder where the reference genomes were previously downloaded. Required if --snpeff_organism is provided
+    * --snpeff_args: additional SnpEff arguments
+
+Output:
+    * Normalized VCF file
+    * Tab-separated values file with the absolute paths to the normalized VCF files, normalized_vcfs.txt
+    * Summary statistics before and after normalization
+```
+
+### Input tables
+
+The table with VCF files expects two tab-separated columns without a header
+
+| Patient name          | VCF                                                             |
+|----------------------|------------------------------------------------------------------------|
+| patient_1             | /path/to/patient_1.vcf               |
+| patient_2             | /path/to/patient_2.vcf                    |
+
+The optional table with BAM files expects two tab-separated columns without a header.
+
+| Patient name          | Sample name:BAM                      |
+|----------------------|---------------------------------|
+| patient_1             | primary_tumor:/path/to/sample_1.primary.bam   |
+| patient_1             | metastasis_tumor:/path/to/sample_1.metastasis.bam   |
+| patient_1             | normal:/path/to/sample_1.normal.bam   |
+| patient_2             | primary_tumor:/path/to/sample_1.primary_1.bam   |
+| patient_2             | primary_tumor:/path/to/sample_1.primary_2.bam   |
+| patient_2             | metastasis_tumor:/path/to/sample_1.metastasis.bam   |
+| patient_2             | normal:/path/to/sample_1.normal.bam   |
+
+Each patient can have any number of samples. Any sample can have any number of BAM files, annotations from the 
+different BAM files of the same sample will be provided with suffixes _1, _2, etc.
+The aggregated vafator annotations on each sample will also be provided without a suffix.
 
 ## Variant filtering
 
@@ -161,76 +233,6 @@ Provide the snpEff folder with `--snpeff_datadir`
 To provide any additional SnpEff arguments use `--snpeff_args` such as 
 `--snpeff_args "-noStats -no-downstream -no-upstream -no-intergenic -no-intron -onlyProtein -hgvs1LetterAa -noShiftHgvs"`, 
 otherwise defaults will be used.
-
-
-## How to run it
-
-Run it from GitHub as follows:
-```
-nextflow run tron-bioinformatics/tronflow-variant-normalization -r v2.0.0 -profile conda --input_vcfs input_vcfs --reference reference.fasta
-```
-
-Otherwise download the project and run as follows:
-```
-nextflow main.nf -profile conda  --input_vcfs input_vcfs --reference reference.fasta
-```
-
-Find the help as follows:
- ```
- $ nextflow run tron-bioinformatics/tronflow-variant-normalization --help
- 
- TronFlow VCF normalization v${VERSION}
-
-Usage:
-    nextflow run main.nf --input_vcfs input_vcfs --reference reference.fasta
-
-
-Input:
-    * --input_vcf: the path to a single VCF to normalize (not compatible with --input_files)
-    * --input_vcfs: the path to a tab-separated values file containing in each row the sample name  and path to the VCF file (not compatible with --input_vcf)
-    The input file does not have header!
-    Example input file:
-    sample1	/path/to/your/file.vcf
-    sample2	/path/to/your/file2.vcf
-    * --reference: path to the FASTA genome reference (indexes expected *.fai, *.dict)
-    * --vcf-without-ad: indicate when the VCFs to normalize do not have the FORMAT/AD annotation
-
-Optional input:
-    * --output: the folder where to publish output
-    * --skip_decompose_complex: flag indicating not to split complex variants (ie: MNVs and combinations of SNVs and indels)
-    * --filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
-    * --input_bams: a tab-separated values file containing in each row the sample name, tumor and normal BAM files for annotation with Vafator
-
-Output:
-    * Normalized VCF file
-    * Tab-separated values file with the absolute paths to the normalized VCF files, normalized_vcfs.txt
-    * Summary statistics before and after normalization
- ```
-
-### Input tables
-
-The table with VCF files expects two tab-separated columns without a header
-
-| Patient name          | VCF                                                             |
-|----------------------|------------------------------------------------------------------------|
-| patient_1             | /path/to/patient_1.vcf               |
-| patient_2             | /path/to/patient_2.vcf                    |
-
-The optional table with BAM files expects two tab-separated columns without a header.
-
-| Patient name          | Sample name:BAM                      |
-|----------------------|---------------------------------|
-| patient_1             | primary_tumor:/path/to/sample_1.primary.bam   |
-| patient_1             | metastasis_tumor:/path/to/sample_1.metastasis.bam   |
-| patient_1             | normal:/path/to/sample_1.normal.bam   |
-| patient_2             | primary_tumor:/path/to/sample_1.primary_1.bam   |
-| patient_2             | primary_tumor:/path/to/sample_1.primary_2.bam   |
-| patient_2             | metastasis_tumor:/path/to/sample_1.metastasis.bam   |
-| patient_2             | normal:/path/to/sample_1.normal.bam   |
-
-Each patient can have any number of samples. Any sample can have any number of BAM files, annotations from the 
-different BAM files of the same sample will be provided with suffixes _1, _2, etc.
-The aggregated vafator annotations on each sample will also be provided without a suffix.
 
 
 ## References
