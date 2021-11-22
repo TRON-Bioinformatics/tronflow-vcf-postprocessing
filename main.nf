@@ -49,8 +49,8 @@ else if (params.input_vcf) {
 if (params.input_bams) {
     Channel
     .fromPath(params.input_bams)
-    .splitCsv(header: ['name', 'tumor_bams', 'normal_bams'], sep: "\t")
-    .map{ row-> tuple(row.name, row.tumor_bams, row.normal_bams) }
+    .splitCsv(header: ['name', 'sample_name', 'bam'], sep: "\t")
+    .map{ row-> tuple(row.name, row.sample_name, row.bam) }
     .set { input_bams }
 }
 
@@ -73,15 +73,13 @@ workflow {
 
     SUMMARY_VCF_2(final_vcfs)
 
-    if ( params.input_bams) {
-        VAFATOR(final_vcfs.join(input_bams))
+    if ( params.input_bams ) {
+        VAFATOR(final_vcfs.join(input_bams.groupTuple()))
         final_vcfs = VAFATOR.out.annotated_vcf
         if ( ! params.skip_multiallelic_filter ) {
             final_vcfs = MULTIALLELIC_FILTER(final_vcfs)
             final_vcfs = MULTIALLELIC_FILTER.out.filtered_vcf
         }
     }
-
-    final_vcfs.map {it.join("\t")}.collectFile(name: "${params.output}/normalized_vcfs.txt", newLine: true)
 }
 

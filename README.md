@@ -167,19 +167,27 @@ Output:
 
 The table with VCF files expects two tab-separated columns without a header
 
-| Sample name          | VCF                                                             |
+| Patient name          | VCF                                                             |
 |----------------------|------------------------------------------------------------------------|
-| sample_1             | /path/to/sample_1.vcf               |
-| sample_2             | /path/to/sample_2.vcf                    |
+| patient_1             | /path/to/patient_1.vcf               |
+| patient_2             | /path/to/patient_2.vcf                    |
 
-The optional table with BAM files expects three tab-separated columns without a header. Multiple comma-separated BAMs can be provided.
+The optional table with BAM files expects two tab-separated columns without a header.
 
-| Sample name          | Tumor BAMs                      | Normal BAMs                  |
-|----------------------|---------------------------------|------------------------------|
-| sample_1             | /path/to/sample_1.tumor_1.bam,/path/to/sample_1.tumor_2.bam      |    /path/to/sample_1.normal_1.bam,/path/to/sample_1.normal_2.bam   |
-| sample_2             | /path/to/sample_2.tumor.bam           |  /path/to/sample_2.normal.bam  |
+| Patient name          | Sample name:BAM                      |
+|----------------------|---------------------------------|
+| patient_1             | primary_tumor:/path/to/sample_1.primary.bam   |
+| patient_1             | metastasis_tumor:/path/to/sample_1.metastasis.bam   |
+| patient_1             | normal:/path/to/sample_1.normal.bam   |
+| patient_2             | primary_tumor:/path/to/sample_1.primary_1.bam   |
+| patient_2             | primary_tumor:/path/to/sample_1.primary_2.bam   |
+| patient_2             | metastasis_tumor:/path/to/sample_1.metastasis.bam   |
+| patient_2             | normal:/path/to/sample_1.normal.bam   |
 
- 
+Each patient can have any number of samples. Any sample can have any number of BAM files, annotations from the 
+different BAM files of the same sample will be provided with suffixes _1, _2, etc.
+The aggregated vafator annotations on each sample will also be provided without a suffix.
+
 
 ## References
 

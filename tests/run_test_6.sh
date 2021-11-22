@@ -3,8 +3,12 @@
 
 source bin/assert.sh
 output_folder=output/test6
-echo -e "tumor_normal\t"`pwd`"/test_data/TESTX_S1_L001.bam\t"`pwd`"/test_data/TESTX_S1_L002.bam" > test_data/test_bams.txt
-echo -e "single_sample\t"`pwd`"/test_data/TESTX_S1_L001.bam,"`pwd`"/test_data/TESTX_S1_L002.bam\t"`pwd`"/test_data/TESTX_S1_L001.bam,"`pwd`"/test_data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
+echo -e "tumor_normal\tprimary:"`pwd`"/test_data/TESTX_S1_L001.bam" > test_data/test_bams.txt
+echo -e "tumor_normal\tnormal:"`pwd`"/test_data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
+echo -e "single_sample\ttumor:"`pwd`"/test_data/TESTX_S1_L001.bam" >> test_data/test_bams.txt
+echo -e "single_sample\ttumor:"`pwd`"/test_data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
+echo -e "single_sample\tnormal:"`pwd`"/test_data/TESTX_S1_L001.bam" >> test_data/test_bams.txt
+echo -e "single_sample\tnormal:"`pwd`"/test_data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
 nextflow main.nf -profile test,conda --output $output_folder --input_bams test_data/test_bams.txt
 test -s $output_folder/single_sample/single_sample.normalized.vcf || { echo "Missing test 6 output file!"; exit 1; }
 test -s $output_folder/tumor_normal/tumor_normal.normalized.vcf || { echo "Missing test 6 output file!"; exit 1; }
@@ -19,4 +23,4 @@ assert_eq `grep tumor_af $output_folder/single_sample/single_sample.normalized.v
 assert_eq `grep normal_af $output_folder/single_sample/single_sample.normalized.vaf.vcf | wc -l | cut -d' ' -f 1` 35 "Wrong number of variants"
 assert_eq `wc -l $output_folder/tumor_normal/tumor_normal.normalized.vaf.vcf | cut -d' ' -f 1` 60 "Wrong number of variants"
 assert_eq `wc -l $output_folder/tumor_normal/tumor_normal.normalized.vaf.filtered_multiallelics.vcf | cut -d' ' -f 1` 53 "Wrong number of variants"
-assert_eq `grep tumor_af $output_folder/tumor_normal/tumor_normal.normalized.vaf.filtered_multiallelics.vcf | wc -l | cut -d' ' -f 1` 24 "Wrong number of variants"
+assert_eq `grep primary_af $output_folder/tumor_normal/tumor_normal.normalized.vaf.filtered_multiallelics.vcf | wc -l | cut -d' ' -f 1` 24 "Wrong number of variants"
