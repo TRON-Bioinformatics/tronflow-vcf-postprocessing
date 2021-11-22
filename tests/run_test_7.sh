@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-source bin/assert.sh
+source tests/assert.sh
 output_folder=output/test7
 echo -e "tumor_normal\t"`pwd`"/test_data/TESTX_S1_L001.bam\t"`pwd`"/test_data/TESTX_S1_L002.bam" > test_data/test_bams.txt
 echo -e "single_sample\t"`pwd`"/test_data/TESTX_S1_L001.bam,"`pwd`"/test_data/TESTX_S1_L002.bam\t"`pwd`"/test_data/TESTX_S1_L001.bam,"`pwd`"/test_data/TESTX_S1_L002.bam" >> test_data/test_bams.txt

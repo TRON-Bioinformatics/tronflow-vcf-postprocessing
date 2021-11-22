@@ -2,10 +2,11 @@
 
 nextflow.enable.dsl = 2
 
-include { BCFTOOLS_NORM; VT_DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modules/normalization'
-include { FILTER_VCF } from './modules/filter'
-include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/summary'
-include { VAFATOR; MULTIALLELIC_FILTER } from './modules/vafator'
+include { FILTER_VCF } from './modules/01_filter'
+include { BCFTOOLS_NORM; VT_DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modules/02_normalization'
+include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/03_summary'
+include { VAFATOR; MULTIALLELIC_FILTER } from './modules/04_vafator'
+include { VARIANT_ANNOTATION } from './modules/05_variant_annotation'
 
 params.help= false
 params.input_vcfs = false
@@ -21,11 +22,18 @@ params.vcf_without_ad = false
 params.mapping_quality = false
 params.base_call_quality = false
 params.skip_multiallelic_filter = false
+params.snpeff_organism = false
+params.snpeff_args = ""
+params.snpeff_datadir = false
 
 
 if (params.help) {
     log.info params.help_message
     exit 0
+}
+
+if ( params.snpeff_organism && ! params.snpeff_datadir) {
+  exit 1, "To run snpEff, please, provide your snpEff data folder with --snpeff_datadir"
 }
 
 if (! params.input_vcfs && ! params.input_vcf) {
@@ -80,6 +88,11 @@ workflow {
             final_vcfs = MULTIALLELIC_FILTER(final_vcfs)
             final_vcfs = MULTIALLELIC_FILTER.out.filtered_vcf
         }
+    }
+
+    if (params.snpeff_organism) {
+        VARIANT_ANNOTATION(final_vcfs)
+        final_vcfs = VARIANT_ANNOTATION.out.annotated_vcf
     }
 }
 
