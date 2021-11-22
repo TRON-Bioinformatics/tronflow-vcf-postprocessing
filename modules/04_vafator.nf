@@ -45,7 +45,7 @@ process MULTIALLELIC_FILTER {
     tuple val(name), file(vcf)
 
     output:
-    tuple file("${vcf.baseName}.filtered_multiallelics.vcf"), emit: filtered_vcf
+    tuple val(name), file("${vcf.baseName}.filtered_multiallelics.vcf"), emit: filtered_vcf
 
     script:
     """

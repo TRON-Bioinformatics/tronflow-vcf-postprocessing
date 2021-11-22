@@ -55,6 +55,8 @@ Optional input:
     * --skip_decompose_complex: flag indicating not to split complex variants (ie: MNVs and combinations of SNVs and indels)
     * --filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
     * --input_bams: a tab-separated values file containing in each row the sample name, tumor and normal BAM files for annotation with Vafator
+    * --skip_multiallelic_filter: after VAFator annotations if any multiallelic variant is present (ie: two different 
+    mutations in the same position) only the highest VAF variant is kept unless this flag is passed
     * --snpeff_organism: the SnpEff organism name (eg: hg19, hg38, GRCh37.75, GRCh38.99)
     * --snpeff_datadir: the SnpEff data folder where the reference genomes were previously downloaded. Required if --snpeff_organism is provided
     * --snpeff_args: additional SnpEff arguments
