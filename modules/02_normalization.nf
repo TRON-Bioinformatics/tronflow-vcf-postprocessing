@@ -34,7 +34,8 @@ process VT_DECOMPOSE_COMPLEX {
     memory params.memory
     tag "${name}"
 
-    conda (params.enable_conda ? "bioconda::vt=0.57721" : null)
+    //conda (params.enable_conda ? "openssl=1.1.1m bioconda::vt=0.57721" : null)
+    conda (params.enable_conda ? "openssl=3.0.0 bioconda::vt=0.57721" : null)
 
     input:
     	tuple val(name), file(vcf)
