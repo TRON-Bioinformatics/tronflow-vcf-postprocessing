@@ -23,12 +23,13 @@ process VAFATOR {
 
     script:
     bams_param = bams.collect { b -> "--bam " + b.split(":").join(" ") }.join(" ")
-    mq_param = "--mapping-quality " + params.mapping_quality
-    bq_param = "--base-call-quality " + params.base_call_quality
     """
     vafator \
     --input-vcf ${vcf} \
-    --output-vcf ${vcf.baseName}.vaf.vcf ${bams_param} ${mq_param} ${bq_param}
+    --output-vcf ${vcf.baseName}.vaf.vcf \
+    ${bams_param} \
+    --mapping-quality ${params.mapping_quality} \
+    --base-call-quality ${params.base_call_quality}
     """
 }
 
