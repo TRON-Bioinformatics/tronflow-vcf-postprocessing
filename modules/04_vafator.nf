@@ -1,8 +1,8 @@
 params.cpus = 1
 params.memory = "4g"
 params.output = ""
-params.mapping_quality = false
-params.base_call_quality = false
+params.mapping_quality = 0
+params.base_call_quality = 0
 params.skip_multiallelic_filter = false
 params.enable_conda = false
 
@@ -23,8 +23,8 @@ process VAFATOR {
 
     script:
     bams_param = bams.collect { b -> "--bam " + b.split(":").join(" ") }.join(" ")
-    mq_param = params.mapping_quality ? "--mapping-quality " + params.mapping_quality : ""
-    bq_param = params.base_call_quality ? "--base-call-quality " + params.base_call_quality : ""
+    mq_param = "--mapping-quality " + params.mapping_quality
+    bq_param = "--base-call-quality " + params.base_call_quality
     """
     vafator \
     --input-vcf ${vcf} \
