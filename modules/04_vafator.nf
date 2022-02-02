@@ -3,7 +3,6 @@ params.memory = "4g"
 params.output = ""
 params.mapping_quality = 0
 params.base_call_quality = 0
-params.skip_multiallelic_filter = false
 params.enable_conda = false
 
 
@@ -27,9 +26,9 @@ process VAFATOR {
     vafator \
     --input-vcf ${vcf} \
     --output-vcf ${vcf.baseName}.vaf.vcf \
-    ${bams_param} \
     --mapping-quality ${params.mapping_quality} \
-    --base-call-quality ${params.base_call_quality}
+    --base-call-quality ${params.base_call_quality} \
+    ${bams_param}
     """
 }
 
