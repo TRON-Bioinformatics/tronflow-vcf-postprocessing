@@ -60,6 +60,8 @@ Optional input:
     * --snpeff_organism: the SnpEff organism name (eg: hg19, hg38, GRCh37.75, GRCh38.99)
     * --snpeff_datadir: the SnpEff data folder where the reference genomes were previously downloaded. Required if --snpeff_organism is provided
     * --snpeff_args: additional SnpEff arguments
+    * --mapping_quality: VAFator minimum mapping quality (default: 0)
+    * --base_call_quality: VAFator minimum base call quality (default: 0)
 
 Output:
     * Normalized VCF file
@@ -206,7 +208,7 @@ chr1	13325	.	CT	C	.	MNV-INDEL	OLD_CLUMPED=chr1:13321:AGCCCT/CGCC	GT:AD:PS	0:229,
 Same as MNVs this behaviour can de disabled with `--skip_decompose_complex`.
 
 
-## Technical annotations
+## Technical annotations (VAFator)
 
 The technical annotations provide an insight on the variant calling process by looking into the context of each variant
 within the pileup of a BAM file. When doing somatic variant calling it may be relevant to have technical annotations
