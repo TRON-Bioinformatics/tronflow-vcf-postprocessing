@@ -49,10 +49,10 @@ Input:
     Example input file:
     sample1	/path/to/your/file.vcf
     sample2	/path/to/your/file2.vcf
-    * --reference: path to the FASTA genome reference (indexes expected *.fai, *.dict)
-    * --vcf-without-ad: indicate when the VCFs to normalize do not have the FORMAT/AD annotation
 
 Optional input:
+    * --reference: path to the FASTA genome reference (indexes expected *.fai, *.dict) [required for normalization]
+    * --vcf-without-ad: indicate when the VCFs to normalize do not have the FORMAT/AD annotation
     * --output: the folder where to publish output
     * --skip_normalization: flag indicating to skip all normalization steps
     * --skip_decompose_complex: flag indicating not to split complex variants (ie: MNVs and combinations of SNVs and indels)
@@ -117,13 +117,13 @@ The normalization pipeline consists of the following steps:
  * Decomposition of multiallelic variants into biallelic variants (ie: A > C,G is decomposed into two variants A > C and A > G)
  * Trim redundant sequence and left align indels, indels in repetitive sequences can have multiple representations
  * Remove duplicated variants
-
-Optionally if BAM files are provided (through `--bam_files`) VCFs are annotated with allele frequencies and depth of 
-coverage by Vafator (https://github.com/TRON-Bioinformatics/vafator). 
  
 The output consists of:
  * The normalized VCF
  * Summary statistics before and after normalization
+ 
+The parameter `--reference` pointing to the reference genome FASTA file is required for normalization. 
+The reference genome requires *.fai and *.dict indexes.
 
 Normalization is not applied if the parameter `--skip_normalization` is passed.
 
