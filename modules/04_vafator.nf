@@ -12,20 +12,20 @@ process VAFATOR {
     tag "${patient_name}"
     publishDir "${params.output}/${patient_name}", mode: "copy"
 
-    conda (params.enable_conda ? "bioconda::vafator=1.1.4" : null)
+    conda (params.enable_conda ? "bioconda::vafator=1.2.5" : null)
 
     input:
     tuple val(patient_name), file(vcf), val(bams)
 
     output:
-    tuple val(patient_name), file("${vcf.baseName}.vaf.vcf"), emit: annotated_vcf
+    tuple val(patient_name), file("${patient_name}.vaf.vcf"), emit: annotated_vcf
 
     script:
     bams_param = bams.collect { b -> "--bam " + b.split(":").join(" ") }.join(" ")
     """
     vafator \
     --input-vcf ${vcf} \
-    --output-vcf ${vcf.baseName}.vaf.vcf \
+    --output-vcf ${patient_name}.vaf.vcf \
     --mapping-quality ${params.mapping_quality} \
     --base-call-quality ${params.base_call_quality} \
     ${bams_param}
@@ -39,16 +39,16 @@ process MULTIALLELIC_FILTER {
     tag "${name}"
     publishDir "${params.output}/${name}", mode: "copy"
 
-    conda (params.enable_conda ? "bioconda::vafator=1.1.4" : null)
+    conda (params.enable_conda ? "bioconda::vafator=1.2.5" : null)
 
     input:
     tuple val(name), file(vcf)
 
     output:
-    tuple val(name), file("${vcf.baseName}.filtered_multiallelics.vcf"), emit: filtered_vcf
+    tuple val(name), file("${name}.filtered_multiallelics.vcf"), emit: filtered_vcf
 
     script:
     """
-    multiallelics-filter --input-vcf ${vcf} --output-vcf ${vcf.baseName}.filtered_multiallelics.vcf
+    multiallelics-filter --input-vcf ${vcf} --output-vcf ${name}.filtered_multiallelics.vcf
     """
 }

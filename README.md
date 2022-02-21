@@ -18,6 +18,8 @@ This pipeline has several objectives:
 * Technical annotations from different BAM files
 * Functional annotations
 
+All of the previous steps are optional.
+
 ## How to run it
 
 Run it from GitHub as follows:
@@ -52,6 +54,7 @@ Input:
 
 Optional input:
     * --output: the folder where to publish output
+    * --skip_normalization: flag indicating to skip all normalization steps
     * --skip_decompose_complex: flag indicating not to split complex variants (ie: MNVs and combinations of SNVs and indels)
     * --filter: specify the filter to apply if any (e.g.: PASS), only variants with this value will be kept
     * --input_bams: a tab-separated values file containing in each row the sample name, tumor and normal BAM files for annotation with Vafator
@@ -96,10 +99,12 @@ The aggregated vafator annotations on each sample will also be provided without 
 
 ## Variant filtering
 
-Optionally, only variants with the value in the column `FILTER` matching the value of parameter `--filter` are kept.
+Only variants with the value in the column `FILTER` matching the value of parameter `--filter` are kept.
 If this parameter is not used not variants are filtered out. Multiple values can be passed separated by commas without spaces.
 
 For instance, `--filter PASS,.` will keep variant having `FILTER=PASS` or `FILTER=.`, but remove all others.
+
+No filter is applied if `--filter` is not passed.
 
 
 ## Variant normalization
@@ -119,6 +124,8 @@ coverage by Vafator (https://github.com/TRON-Bioinformatics/vafator).
 The output consists of:
  * The normalized VCF
  * Summary statistics before and after normalization
+
+Normalization is not applied if the parameter `--skip_normalization` is passed.
 
 
 ![Pipeline](images/variant_normalization_pipeline.png)
@@ -215,6 +222,8 @@ within the pileup of a BAM file. When doing somatic variant calling it may be re
 for the same variant in a patient from multiple BAM files.
 These annotations are provided by VAFator (https://github.com/TRON-Bioinformatics/vafator).
 
+No technical annotations are performed if the parameter `--input_bams` is not passed.
+
 ## Functional annotations
 
 The functional annotations provide a biological context for every variant. Such as the overlapping genes or the effect 
@@ -237,6 +246,8 @@ Provide the snpEff folder with `--snpeff_datadir`
 To provide any additional SnpEff arguments use `--snpeff_args` such as 
 `--snpeff_args "-noStats -no-downstream -no-upstream -no-intergenic -no-intron -onlyProtein -hgvs1LetterAa -noShiftHgvs"`, 
 otherwise defaults will be used.
+
+No functional annotations are performed if the parameters `--snpeff_organism` and `--snpeff_datadir` are not passed.
 
 
 ## References

@@ -14,6 +14,7 @@ params.input_bams = false
 params.input_vcf = false
 params.reference = false
 params.output = "output"
+params.skip_normalization = false
 params.skip_decompose_complex = false
 params.filter = false
 params.cpus = 1
@@ -30,6 +31,10 @@ if (params.help) {
 
 if ( params.snpeff_organism && ! params.snpeff_datadir) {
   exit 1, "To run snpEff, please, provide your snpEff data folder with --snpeff_datadir"
+}
+
+if (params.skip_normalization && ! params.input_bams && ! params.snpeff_organism) {
+  exit -1, "Neither normalization, VAFator annotation or SnpEff annotation enabled! Nothing to do..."
 }
 
 if (! params.input_vcfs && ! params.input_vcf) {
@@ -67,15 +72,20 @@ workflow {
 
     SUMMARY_VCF(input_vcfs)
 
-    final_vcfs = BCFTOOLS_NORM(input_vcfs)
-    if (! params.skip_decompose_complex) {
-        VT_DECOMPOSE_COMPLEX(final_vcfs)
-        final_vcfs = VT_DECOMPOSE_COMPLEX.out.decomposed_vcfs
-    }
-    REMOVE_DUPLICATES(final_vcfs)
-    final_vcfs = REMOVE_DUPLICATES.out.deduplicated_vcfs
+    if (! params.skip_normalization) {
+        final_vcfs = BCFTOOLS_NORM(input_vcfs)
+        if (! params.skip_decompose_complex) {
+            VT_DECOMPOSE_COMPLEX(final_vcfs)
+            final_vcfs = VT_DECOMPOSE_COMPLEX.out.decomposed_vcfs
+        }
+        REMOVE_DUPLICATES(final_vcfs)
+        final_vcfs = REMOVE_DUPLICATES.out.deduplicated_vcfs
 
-    SUMMARY_VCF_2(final_vcfs)
+        SUMMARY_VCF_2(final_vcfs)
+    }
+    else {
+        final_vcfs = input_vcfs
+    }
 
     if ( params.input_bams ) {
         VAFATOR(final_vcfs.join(input_bams.groupTuple()))
