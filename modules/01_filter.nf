@@ -9,7 +9,7 @@ process FILTER_VCF {
     memory params.memory
     tag "${name}"
 
-    conda (params.enable_conda ? "conda-forge::libgcc-ng=9.4.0 bioconda::bcftools=1.15.1 openssl=1.0" : null)
+    conda (params.enable_conda ? "conda-forge::libgcc-ng=9.4.0 bioconda::bcftools=1.15.1" : null)
 
     input:
     	tuple val(name), file(vcf)
