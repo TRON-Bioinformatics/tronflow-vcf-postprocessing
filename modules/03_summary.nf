@@ -9,7 +9,7 @@ process SUMMARY_VCF {
   tag "${name}"
   publishDir "${params.output}/${name}/metrics", mode: "copy"
 
-  conda (params.enable_conda ? "conda-forge::libgcc-ng=9.4.0 bioconda::bcftools=1.15.1" : null)
+  conda (params.enable_conda ? "bioconda::bcftools=1.15.1" : null)
 
   input:
     tuple val(name), file(vcf)
