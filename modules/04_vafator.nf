@@ -12,7 +12,7 @@ process VAFATOR {
     tag "${patient_name}"
     publishDir "${params.output}/${patient_name}", mode: "copy"
 
-    conda (params.enable_conda ? "bioconda::vafator=1.2.5" : null)
+    conda (params.enable_conda ? "bioconda::vafator=2.0.1" : null)
 
     input:
     tuple val(patient_name), file(vcf), val(bams)
