@@ -58,8 +58,8 @@ else if (params.input_vcf) {
 if (params.input_bams) {
     Channel
     .fromPath(params.input_bams)
-    .splitCsv(header: ['name', 'sample_name', 'bam'], sep: "\t")
-    .map{ row-> tuple(row.name, row.sample_name, row.bam) }
+    .splitCsv(header: ['name', 'bam'], sep: "\t")
+    .map{ row-> tuple(row.name, row.bam) }
     .set { input_bams }
 }
 
