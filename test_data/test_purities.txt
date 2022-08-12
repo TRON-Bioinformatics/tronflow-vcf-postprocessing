@@ -1,0 +1,4 @@
+tumor_normal	primary:0.5
+tumor_normal	normal:0.6
+single_sample	tumor:0.7
+single_sample	normal:0.8

@@ -11,6 +11,7 @@ include { VARIANT_ANNOTATION } from './modules/05_variant_annotation'
 params.help= false
 params.input_vcfs = false
 params.input_bams = false
+params.input_purities = false
 params.input_vcf = false
 params.reference = false
 params.output = "output"
@@ -63,6 +64,14 @@ if (params.input_bams) {
     .set { input_bams }
 }
 
+if (params.input_purities) {
+    Channel
+    .fromPath(params.input_purities)
+    .splitCsv(header: ['name', 'purity'], sep: "\t")
+    .map{ row-> tuple(row.name, row.purity) }
+    .set { input_purities }
+}
+
 workflow {
 
     if (params.filter) {
@@ -88,7 +97,12 @@ workflow {
     }
 
     if ( params.input_bams ) {
-        VAFATOR(final_vcfs.join(input_bams.groupTuple()))
+        if (params.input_purities) {
+            VAFATOR(final_vcfs.join(input_bams.groupTuple()).join(input_purities.groupTuple()))
+        }
+        else {
+            VAFATOR(final_vcfs.join(input_bams.groupTuple()))
+        }
         final_vcfs = VAFATOR.out.annotated_vcf
         if ( ! params.skip_multiallelic_filter ) {
             final_vcfs = MULTIALLELIC_FILTER(final_vcfs)

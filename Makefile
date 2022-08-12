@@ -24,3 +24,4 @@ test:
 	bash tests/run_test_7.sh
 	bash tests/run_test_8.sh
 	bash tests/run_test_10.sh
+	bash tests/run_test_11.sh

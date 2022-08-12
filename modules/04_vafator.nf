@@ -15,20 +15,21 @@ process VAFATOR {
     conda (params.enable_conda ? "bioconda::vafator=2.0.1" : null)
 
     input:
-    tuple val(patient_name), file(vcf), val(bams)
+    tuple val(patient_name), file(vcf), val(bams), val(purities)
 
     output:
     tuple val(patient_name), file("${patient_name}.vaf.vcf"), emit: annotated_vcf
 
     script:
     bams_param = bams.collect { b -> "--bam " + b.split(":").join(" ") }.join(" ")
+    purity_param = purities.collect { b -> "--purity " + b.split(":").join(" ") }.join(" ")
     """
     vafator \
     --input-vcf ${vcf} \
     --output-vcf ${patient_name}.vaf.vcf \
     --mapping-quality ${params.mapping_quality} \
     --base-call-quality ${params.base_call_quality} \
-    ${bams_param}
+    ${bams_param} ${purity_param}
     """
 }
 
