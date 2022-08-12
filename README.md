@@ -74,14 +74,14 @@ Output:
 
 ### Input tables
 
-The table with VCF files expects two tab-separated columns without a header
+The table with **VCF files** expects two tab-separated columns without a header
 
 | Patient name      | VCF                                    |
 |-------------------|----------------------------------------|
 | patient_1         | /path/to/patient_1.vcf                 |
 | patient_2         | /path/to/patient_2.vcf                 |
 
-The optional table with BAM files expects two tab-separated columns without a header.
+The optional table with **BAM files** expects two tab-separated columns without a header.
 
 | Patient name       | Sample name:BAM                                   |
 |--------------------|---------------------------------------------------|
@@ -93,8 +93,13 @@ The optional table with BAM files expects two tab-separated columns without a he
 | patient_2          | metastasis_tumor:/path/to/sample_1.metastasis.bam |
 | patient_2          | normal:/path/to/sample_1.normal.bam               |
 
-The optional table with tumor purities expects two tab-separated columns without a header. 
-Normal samples are not expected to have a purity value, the default purity is 1.0.
+Each patient can have any number of samples. Any sample can have any number of BAM files, annotations from the 
+different BAM files of the same sample will be provided with suffixes _1, _2, etc.
+The aggregated vafator annotations on each sample will also be provided without a suffix.
+
+
+The optional table with **tumor purities** expects two tab-separated columns without a header. 
+The default purity is 1.0.
 Purity values are in the range 0.0 to 1.0.
 The purity values are used to adjust the expected VAF which is then used to calculate the power to detect a 
 somatic mutation and the probability of an undetected somatic mutation.
@@ -106,9 +111,17 @@ somatic mutation and the probability of an undetected somatic mutation.
 | patient_2          | primary_tumor:0.6    |
 | patient_2          | metastasis_tumor:0.7 |
 
-Each patient can have any number of samples. Any sample can have any number of BAM files, annotations from the 
-different BAM files of the same sample will be provided with suffixes _1, _2, etc.
-The aggregated vafator annotations on each sample will also be provided without a suffix.
+The optional table with **local clonality** values expects two tab-separated columns without a header.
+The local clonalities are provided in a Bedgraph file as described in VAFator documentation or as a genome-wide
+numeric parameter.
+
+| Patient name       | Sample name:local clonalities                                        |
+|--------------------|----------------------------------------------------------------------|
+| patient_1          | primary_tumor:/path/to/patient_1.primary.local_clonalities.bed       |
+| patient_1          | metastasis_tumor:/path/to/patient_1.metastasis.local_clonalities.bed |
+| patient_2          | primary_tumor:3                                                      |
+| patient_2          | metastasis_tumor:2                                                   |
+
 
 ## Variant filtering
 

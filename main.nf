@@ -10,9 +10,14 @@ include { VARIANT_ANNOTATION } from './modules/05_variant_annotation'
 
 params.help= false
 params.input_vcfs = false
+
+// optional VAFator inputs
 params.input_bams = false
-params.input_purities = false
 params.input_vcf = false
+params.input_purities = false
+params.input_clonalities = false
+
+
 params.reference = false
 params.output = "output"
 params.skip_normalization = false
@@ -21,6 +26,8 @@ params.filter = false
 params.cpus = 1
 params.memory = "4g"
 params.skip_multiallelic_filter = false
+
+// SnpEff input
 params.snpeff_organism = false
 params.snpeff_datadir = false
 
@@ -71,6 +78,20 @@ if (params.input_purities) {
     .map{ row-> tuple(row.name, row.purity) }
     .set { input_purities }
 }
+else {
+    input_purities = Channel.fromList([])
+}
+
+if (params.input_clonalities) {
+    Channel
+    .fromPath(params.input_clonalities)
+    .splitCsv(header: ['name', 'clonality_bed'], sep: "\t")
+    .map{ row-> tuple(row.name, row.clonality_bed) }
+    .set { input_clonalities }
+}
+else {
+    input_clonalities = Channel.fromList([])
+}
 
 workflow {
 
@@ -97,12 +118,19 @@ workflow {
     }
 
     if ( params.input_bams ) {
-        if (params.input_purities) {
-            VAFATOR(final_vcfs.join(input_bams.groupTuple()).join(input_purities.groupTuple()))
-        }
-        else {
-            VAFATOR(final_vcfs.join(input_bams.groupTuple()))
-        }
+        // prepare input for VAFator and call it
+        vafator_input = final_vcfs.join(input_bams.groupTuple())
+            .join(input_purities.groupTuple(), remainder: true)
+            .join(input_clonalities.groupTuple(), remainder: true)
+
+        //if (params.input_purities) {
+        //    vafator_input = vafator_input.join(input_purities.groupTuple())
+        //}
+        //if (params.input_clonalities) {
+        //    vafator_input = vafator_input.join(input_clonalities.groupTuple())
+        //}
+        VAFATOR(vafator_input)
+
         final_vcfs = VAFATOR.out.annotated_vcf
         if ( ! params.skip_multiallelic_filter ) {
             final_vcfs = MULTIALLELIC_FILTER(final_vcfs)
