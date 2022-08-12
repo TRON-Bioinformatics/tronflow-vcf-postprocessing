@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-source tests/assert.sh
-output_folder=output/test1
+source test/scripts/assert.sh
+output_folder=test/output/test1
 nextflow main.nf -profile test,conda --output $output_folder
 test -s $output_folder/single_sample/single_sample.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }
 test -s $output_folder/tumor_normal/tumor_normal.normalized.vcf || { echo "Missing test 1 output file!"; exit 1; }

@@ -1,16 +1,16 @@
 #!/bin/bash
 
 
-source tests/assert.sh
-output_folder=output/test11
+source test/scripts/assert.sh
+output_folder=test/output/test11
 
 # build input BAMs file
-echo -e "tumor_normal\tprimary:"`pwd`"/test_data/TESTX_S1_L001.bam" > test_data/test_bams.txt
-echo -e "tumor_normal\tnormal:"`pwd`"/test_data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
-echo -e "single_sample\ttumor:"`pwd`"/test_data/TESTX_S1_L001.bam" >> test_data/test_bams.txt
-echo -e "single_sample\ttumor:"`pwd`"/test_data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
-echo -e "single_sample\tnormal:"`pwd`"/test_data/TESTX_S1_L001.bam" >> test_data/test_bams.txt
-echo -e "single_sample\tnormal:"`pwd`"/test_data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
+echo -e "tumor_normal\tprimary:"`pwd`"/test/data/TESTX_S1_L001.bam" > test_data/test_bams.txt
+echo -e "tumor_normal\tnormal:"`pwd`"/test/data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
+echo -e "single_sample\ttumor:"`pwd`"/test/data/TESTX_S1_L001.bam" >> test_data/test_bams.txt
+echo -e "single_sample\ttumor:"`pwd`"/test/data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
+echo -e "single_sample\tnormal:"`pwd`"/test/data/TESTX_S1_L001.bam" >> test_data/test_bams.txt
+echo -e "single_sample\tnormal:"`pwd`"/test/data/TESTX_S1_L002.bam" >> test_data/test_bams.txt
 
 # build input purities file
 echo -e "tumor_normal\tprimary:0.5" > test_data/test_purities.txt

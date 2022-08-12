@@ -1,6 +1,6 @@
 #!/bin/bash
 
-output_folder=output/test0
+output_folder=test/output/test0
 
 nextflow main.nf --help
 
