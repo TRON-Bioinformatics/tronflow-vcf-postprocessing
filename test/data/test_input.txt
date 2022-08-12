@@ -1,2 +1,2 @@
-tumor_normal	test_data/test_tumor_normal.vcf
-single_sample	test_data/test_single_sample.vcf
+tumor_normal	test/data/test_tumor_normal.vcf
+single_sample	test/data/test_single_sample.vcf

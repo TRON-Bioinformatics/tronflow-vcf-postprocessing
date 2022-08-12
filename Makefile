@@ -3,6 +3,8 @@ SHELL := /bin/bash
 
 all : clean test
 
+.PHONY: all test clean
+
 clean:
 	rm -rf output
 	rm -rf work
