@@ -10,10 +10,10 @@ include { VARIANT_ANNOTATION } from './modules/05_variant_annotation'
 
 params.help= false
 params.input_vcfs = false
+params.input_vcf = false
 
 // optional VAFator inputs
 params.input_bams = false
-params.input_vcf = false
 params.input_purities = false
 params.input_clonalities = false
 
