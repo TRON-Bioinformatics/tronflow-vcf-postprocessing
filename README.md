@@ -99,12 +99,12 @@ Purity values are in the range 0.0 to 1.0.
 The purity values are used to adjust the expected VAF which is then used to calculate the power to detect a 
 somatic mutation and the probability of an undetected somatic mutation.
 
-| Patient name       | Sample name:tumor purity            |
-|--------------------|-------------------------------------|
-| patient_1          | primary_tumor:0.4                   |
-| patient_1          | metastasis_tumor:0.5                |
-| patient_2          | primary_tumor:0.6                   |
-| patient_2          | metastasis_tumor:0.7                |
+| Patient name       | Sample name:purity   |
+|--------------------|----------------------|
+| patient_1          | primary_tumor:0.4    |
+| patient_1          | metastasis_tumor:0.5 |
+| patient_2          | primary_tumor:0.6    |
+| patient_2          | metastasis_tumor:0.7 |
 
 Each patient can have any number of samples. Any sample can have any number of BAM files, annotations from the 
 different BAM files of the same sample will be provided with suffixes _1, _2, etc.
