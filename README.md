@@ -1,6 +1,7 @@
 # TronFlow VCF postprocessing
 
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/release/tron-bioinformatics/tronflow-vcf-postprocessing?sort=semver)
+![GitHub all releases](https://img.shields.io/github/downloads/tron-bioinformatics/tronflow-vcf-postprocessing/total)
 [![Run tests](https://github.com/TRON-Bioinformatics/tronflow-vcf-postprocessing/actions/workflows/automated_tests.yml/badge.svg?branch=master)](https://github.com/TRON-Bioinformatics/tronflow-vcf-postprocessing/actions/workflows/automated_tests.yml)
 [![DOI](https://zenodo.org/badge/372133189.svg)](https://zenodo.org/badge/latestdoi/372133189)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
@@ -14,9 +15,9 @@ Find the documentation here [![Documentation Status](https://readthedocs.org/pro
 
 This pipeline has several objectives:
 * Variant filtering
-* Variant normalization
-* Technical annotations from different BAM files
-* Functional annotations
+* Variant normalization (BCFtools and vt)
+* Technical annotations from different BAM files (VAFator)
+* Functional annotations (SnpEff or BCFtools csq)
 
 All of the previous steps are optional.
 
