@@ -28,3 +28,4 @@ test:
 	bash test/scripts/run_test_10.sh
 	bash test/scripts/run_test_11.sh
 	bash test/scripts/run_test_12.sh
+	bash test/scripts/run_test_13.sh
