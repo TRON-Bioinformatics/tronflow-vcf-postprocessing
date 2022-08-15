@@ -1,7 +1,6 @@
 # TronFlow VCF postprocessing
 
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/release/tron-bioinformatics/tronflow-vcf-postprocessing?sort=semver)
-![GitHub all releases](https://img.shields.io/github/downloads/tron-bioinformatics/tronflow-vcf-postprocessing/total)
 [![Run tests](https://github.com/TRON-Bioinformatics/tronflow-vcf-postprocessing/actions/workflows/automated_tests.yml/badge.svg?branch=master)](https://github.com/TRON-Bioinformatics/tronflow-vcf-postprocessing/actions/workflows/automated_tests.yml)
 [![DOI](https://zenodo.org/badge/372133189.svg)](https://zenodo.org/badge/latestdoi/372133189)
 [![License](https://img.shields.io/badge/license-MIT-green)](https://opensource.org/licenses/MIT)
