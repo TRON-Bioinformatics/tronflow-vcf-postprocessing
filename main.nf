@@ -43,6 +43,10 @@ if ( params.snpeff_organism && ! params.snpeff_datadir) {
   exit 1, "To run snpEff, please, provide your snpEff data folder with --snpeff_datadir"
 }
 
+if (params.snpeff_organism && params.gff) {
+    exit 1, "Please use either SnpEff (--snpeff_organism) or BCFtools csq (--gff), but not both"
+}
+
 if (params.skip_normalization && ! params.input_bams && ! params.snpeff_organism) {
   exit -1, "Neither normalization, VAFator annotation or SnpEff annotation enabled! Nothing to do..."
 }

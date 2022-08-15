@@ -36,7 +36,7 @@ Find the help as follows:
  ```
  $ nextflow run tron-bioinformatics/tronflow-vcf-postprocessing --help
  
- TronFlow VCF normalization v${VERSION}
+ TronFlow VCF postprocessing v${VERSION}
 
 Usage:
     nextflow run main.nf --input_vcfs input_vcfs --reference reference.fasta
@@ -67,7 +67,8 @@ Optional input:
     Example input file:
     sample1	primary:3
     sample1	metastasis:/path/to/metastasis.local_clonalities.bed
-    * --reference: path to the FASTA genome reference (indexes expected *.fai, *.dict) [required for normalization]
+    * --reference: absolute path to the FASTA genome reference (indexes expected *.fai, *.dict) [required for normalization and for functional annotation with BCFtools]
+    * --gff: absolute path to a GFF gene annotations file [required for functional annotation with BCFtools, only Ensembl-like GFF files]
     * --vcf-without-ad: indicate when the VCFs to normalize do not have the FORMAT/AD annotation
     * --output: the folder where to publish output
     * --skip_normalization: flag indicating to skip all normalization steps
@@ -269,7 +270,10 @@ No technical annotations are performed if the parameter `--input_bams` is not pa
 ## Functional annotations
 
 The functional annotations provide a biological context for every variant. Such as the overlapping genes or the effect 
-of the variant in a protein. These annotations are provided by SnpEff (Cingolani, 2012).
+of the variant in a protein. These annotations are provided by SnpEff (Cingolani, 2012) or by BCFtools csq (Danecek, 2017).
+Only one of the previous can be used.
+
+### Using SnpEff
 
 The SnpEff available human annotations are:
 * GRCh37.75 
@@ -289,7 +293,15 @@ To provide any additional SnpEff arguments use `--snpeff_args` such as
 `--snpeff_args "-noStats -no-downstream -no-upstream -no-intergenic -no-intron -onlyProtein -hgvs1LetterAa -noShiftHgvs"`, 
 otherwise defaults will be used.
 
-No functional annotations are performed if the parameters `--snpeff_organism` and `--snpeff_datadir` are not passed.
+No SnpEff functional annotations are performed if the parameters `--snpeff_organism` and `--snpeff_datadir` are not passed.
+
+### Using BCFtools csq
+
+BCFtools does not require any previous preparation. It expects two parameters: 
+* `--reference`: absolute path to the FASTA reference genome
+* `--gff`: absolute path to the Ensembl-like GFF annotations (ie: Gencode GFF files do not work https://github.com/samtools/bcftools/issues/1078)
+
+Importantly, BCFtools does use the available phasing information to evaluate all mutations affecting any given transcript together.
 
 
 ## References
@@ -298,3 +310,4 @@ No functional annotations are performed if the parameters `--snpeff_organism` an
 * Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H. Twelve years of SAMtools and BCFtools. Gigascience. 2021 Feb 16;10(2):giab008. doi: 10.1093/gigascience/giab008. PMID: 33590861; PMCID: PMC7931819.
 * Di Tommaso, P., Chatzou, M., Floden, E. W., Barja, P. P., Palumbo, E., & Notredame, C. (2017). Nextflow enables reproducible computational workflows. Nature Biotechnology, 35(4), 316–319. 10.1038/nbt.3820
 * Cingolani P, Platts A, Wang le L, Coon M, Nguyen T, Wang L, Land SJ, Lu X, Ruden DM. (2012) A program for annotating and predicting the effects of single nucleotide polymorphisms, SnpEff: SNPs in the genome of Drosophila melanogaster strain w1118; iso-2; iso-3.". Fly (Austin). 2012 Apr-Jun;6(2):80-92. PMID: 22728672
+* Danecek, P., & McCarthy, S. A. (2017). BCFtools/csq: haplotype-aware variant consequences. Bioinformatics, 33(13), 2037–2039. https://doi.org/10.1093/bioinformatics/btx100
