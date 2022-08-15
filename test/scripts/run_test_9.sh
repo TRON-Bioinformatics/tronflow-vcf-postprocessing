@@ -2,7 +2,7 @@
 
 ### this test cannot be automated as it relies on SnpEff references which need to be downloaded beforehand
 source test/scripts/assert.sh
-output_folder=test/output/test8
+output_folder=test/output/test9
 snpeff_datadir=/home/you/snpeff
 
 nextflow main.nf -profile test,conda --output $output_folder --snpeff_organism hg19 --snpeff_datadir $snpeff_datadir

@@ -6,7 +6,7 @@ include { FILTER_VCF } from './modules/01_filter'
 include { BCFTOOLS_NORM; VT_DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modules/02_normalization'
 include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/03_summary'
 include { VAFATOR; MULTIALLELIC_FILTER } from './modules/04_vafator'
-include { VARIANT_ANNOTATION } from './modules/05_variant_annotation'
+include { VARIANT_ANNOTATION_SNPEFF; VARIANT_ANNOTATION_BCFTOOLS } from './modules/05_variant_annotation'
 
 params.help= false
 params.input_vcfs = false
@@ -19,6 +19,8 @@ params.input_clonalities = false
 
 
 params.reference = false
+params.gff = false
+
 params.output = "output"
 params.skip_normalization = false
 params.skip_decompose_complex = false
@@ -39,6 +41,10 @@ if (params.help) {
 
 if ( params.snpeff_organism && ! params.snpeff_datadir) {
   exit 1, "To run snpEff, please, provide your snpEff data folder with --snpeff_datadir"
+}
+
+if (params.snpeff_organism && params.gff) {
+    exit 1, "Please use either SnpEff (--snpeff_organism) or BCFtools csq (--gff), but not both"
 }
 
 if (params.skip_normalization && ! params.input_bams && ! params.snpeff_organism) {
@@ -123,12 +129,6 @@ workflow {
             .join(input_purities.groupTuple(), remainder: true)
             .join(input_clonalities.groupTuple(), remainder: true)
 
-        //if (params.input_purities) {
-        //    vafator_input = vafator_input.join(input_purities.groupTuple())
-        //}
-        //if (params.input_clonalities) {
-        //    vafator_input = vafator_input.join(input_clonalities.groupTuple())
-        //}
         VAFATOR(vafator_input)
 
         final_vcfs = VAFATOR.out.annotated_vcf
@@ -139,8 +139,12 @@ workflow {
     }
 
     if (params.snpeff_organism) {
-        VARIANT_ANNOTATION(final_vcfs)
-        final_vcfs = VARIANT_ANNOTATION.out.annotated_vcf
+        VARIANT_ANNOTATION_SNPEFF(final_vcfs)
+        final_vcfs = VARIANT_ANNOTATION_SNPEFF.out.annotated_vcf
+    }
+    else if (params.gff) {
+        VARIANT_ANNOTATION_BCFTOOLS(final_vcfs)
+        final_vcfs = VARIANT_ANNOTATION_BCFTOOLS.out.annotated_vcf
     }
 }
 
