@@ -80,6 +80,7 @@ Optional input:
     * --snpeff_organism: the SnpEff organism name (eg: hg19, hg38, GRCh37.75, GRCh38.99)
     * --snpeff_datadir: the SnpEff data folder where the reference genomes were previously downloaded. Required if --snpeff_organism is provided
     * --snpeff_args: additional SnpEff arguments
+    * --snpeff_memory: for some samples SnpEff may require to use more memory (default: 3g)
     * --mapping_quality: VAFator minimum mapping quality (default: 0)
     * --base_call_quality: VAFator minimum base call quality (default: 0)
 
