@@ -13,12 +13,15 @@ These workflows are implemented in the Nextflow (Di Tommaso, 2017) framework.
 Find the documentation here [![Documentation Status](https://readthedocs.org/projects/tronflow-docs/badge/?version=latest)](https://tronflow-docs.readthedocs.io/en/latest/?badge=latest)
 
 This pipeline has several objectives:
+* VCF cleanup (Picard's FixVcfHeader, bgzip and tabix index)
 * Variant filtering
 * Variant normalization (BCFtools and vt)
 * Technical annotations from different BAM files (VAFator)
 * Functional annotations (SnpEff or BCFtools csq)
 
-All of the previous steps are optional.
+All of the previous steps are optional, except the VCF cleanup.
+
+Only VCF and bgzipped VCFs are supported.
 
 ## How to run it
 
@@ -83,6 +86,7 @@ Optional input:
     * --snpeff_memory: for some samples SnpEff may require to use more memory (default: 3g)
     * --mapping_quality: VAFator minimum mapping quality (default: 0)
     * --base_call_quality: VAFator minimum base call quality (default: 0)
+    * --header: VCF header for reheader. If your VCFs are missing contigs in the header the fixed header can be passed here  (default: None)
 
 Output:
     * Normalized VCF file
@@ -139,6 +143,16 @@ numeric parameter.
 | patient_1          | metastasis_tumor:/path/to/patient_1.metastasis.local_clonalities.bed |
 | patient_2          | primary_tumor:3                                                      |
 | patient_2          | metastasis_tumor:2                                                   |
+
+
+## VCF cleanup
+
+VCFs can be very heterogeneous and although most of the header fields are optional according to the VCF specification, 
+some tools to manipulate VCFs require them. 
+In this step, we use Picard's FixVcfHeader to minimize these issues. This will fix most issues, but if chromosomes are 
+missing from the header pass a corrected header with the missing chromosomes using the 
+parameter `--header new_header.vcf`.
+The VCF files are also bgzipped and tabix indexed for subsequent processing.
 
 
 ## Variant filtering

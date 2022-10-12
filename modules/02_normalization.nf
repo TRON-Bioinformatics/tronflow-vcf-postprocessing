@@ -12,7 +12,7 @@ process BCFTOOLS_NORM {
     conda (params.enable_conda ? "conda-forge::libgcc-ng=10.3.0 conda-forge::gsl=2.7 bioconda::bcftools=1.15.1" : null)
 
     input:
-    	tuple val(name), file(vcf)
+      tuple val(name), file(vcf)
 
     output:
       tuple val(name), file("${name}.atomic_left_aligned.vcf"), emit: normalized_vcfs

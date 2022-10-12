@@ -2,6 +2,7 @@
 
 nextflow.enable.dsl = 2
 
+include { TABIX; FIX_VCF_HEADER } from './modules/00_vcf_cleanup'
 include { FILTER_VCF } from './modules/01_filter'
 include { BCFTOOLS_NORM; VT_DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modules/02_normalization'
 include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/03_summary'
@@ -11,6 +12,9 @@ include { VARIANT_ANNOTATION_SNPEFF; VARIANT_ANNOTATION_BCFTOOLS } from './modul
 params.help= false
 params.input_vcfs = false
 params.input_vcf = false
+
+// optional VCF header
+params.header = false
 
 // optional VAFator inputs
 params.input_bams = false
@@ -45,10 +49,6 @@ if ( params.snpeff_organism && ! params.snpeff_datadir) {
 
 if (params.snpeff_organism && params.gff) {
     exit 1, "Please use either SnpEff (--snpeff_organism) or BCFtools csq (--gff), but not both"
-}
-
-if (params.skip_normalization && ! params.input_bams && ! params.snpeff_organism) {
-  exit -1, "Neither normalization, VAFator annotation or SnpEff annotation enabled! Nothing to do..."
 }
 
 if (! params.input_vcfs && ! params.input_vcf) {
@@ -101,15 +101,18 @@ else {
 
 workflow {
 
+    // makes sure that VCFs have the right header and are tabix indexed to minimize funny header issues
+    fixed_vcfs = FIX_VCF_HEADER(input_vcfs)
+
     if (params.filter) {
-        FILTER_VCF(input_vcfs)
-        input_vcfs = FILTER_VCF.out.filtered_vcfs
+        FILTER_VCF(fixed_vcfs)
+        fixed_vcfs = FILTER_VCF.out.filtered_vcfs
     }
 
-    SUMMARY_VCF(input_vcfs)
+    SUMMARY_VCF(fixed_vcfs)
 
     if (! params.skip_normalization) {
-        final_vcfs = BCFTOOLS_NORM(input_vcfs)
+        final_vcfs = BCFTOOLS_NORM(fixed_vcfs)
         if (! params.skip_decompose_complex) {
             VT_DECOMPOSE_COMPLEX(final_vcfs)
             final_vcfs = VT_DECOMPOSE_COMPLEX.out.decomposed_vcfs
@@ -120,7 +123,7 @@ workflow {
         SUMMARY_VCF_2(final_vcfs)
     }
     else {
-        final_vcfs = input_vcfs
+        final_vcfs = fixed_vcfs
     }
 
     if ( params.input_bams ) {
