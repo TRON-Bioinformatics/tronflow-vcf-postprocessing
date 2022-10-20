@@ -49,6 +49,7 @@ process VARIANT_ANNOTATION_BCFTOOLS {
         --fasta-ref ${params.reference} \\
         --gff-annot ${params.gff} ${vcf} \\
         --output-type v \\
-        --output ${name}.annotated.vcf
+        --output ${name}.annotated.vcf \\
+        --phase a
     """
 }

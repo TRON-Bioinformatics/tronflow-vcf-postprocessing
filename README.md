@@ -268,6 +268,25 @@ These annotations are provided by VAFator (https://github.com/TRON-Bioinformatic
 
 No technical annotations are performed if the parameter `--input_bams` is not passed.
 
+## Phasing with WhatsHap
+
+The phase of the mutations can be inferred from the reads pileup.
+This information is relevant to determine the impact of nearby mutations.
+WhatsHap adds the phasing information when possible to the VCF following the VCF specification for that purpose.
+Genotypes with phase information use the `|` instead of the `/` and `0|1` and `1|0` represent the two different phases.
+A homozygous mutations in phase is represented as `1|1`.
+Furthermore, because phasing may be incomplete, to define the different phased blocks the INFO/PS annotation used. 
+All mutations belonging to the same phase block share the same PS number.
+
+BAM files need to be provided to perform phasing with `--input_bams` and the phasing sample has to be determined with 
+`--phasing_sample`.
+
+This approach has some limitations:
+- We only support diploid genotyped VCF files. WhatsHap does support polyploid samples. But the particular case of 
+somatic mutations is not supported.
+- The sample name chosen to perform the phasing has to be the same across all VCFs. 
+Not to be mistaken with the patient name. Eg: only `normal` samples across all patients can be used for phasing
+
 ## Functional annotations
 
 The functional annotations provide a biological context for every variant. Such as the overlapping genes or the effect 

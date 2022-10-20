@@ -6,10 +6,13 @@ include { FILTER_VCF } from './modules/01_filter'
 include { BCFTOOLS_NORM; VT_DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modules/02_normalization'
 include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/03_summary'
 include { VAFATOR; MULTIALLELIC_FILTER } from './modules/04_vafator'
-include { VARIANT_ANNOTATION_SNPEFF; VARIANT_ANNOTATION_BCFTOOLS } from './modules/05_variant_annotation'
+include { WHATSHAP } from './modules/05_phasing'
+include { VARIANT_ANNOTATION_SNPEFF; VARIANT_ANNOTATION_BCFTOOLS } from './modules/06_variant_annotation'
+
 
 params.help= false
 params.input_vcfs = false
+params.input_bams = false
 params.input_vcf = false
 
 // optional VAFator inputs
@@ -32,6 +35,7 @@ params.skip_multiallelic_filter = false
 // SnpEff input
 params.snpeff_organism = false
 params.snpeff_datadir = false
+params.phasing_sample = false
 
 
 if (params.help) {
@@ -135,6 +139,10 @@ workflow {
         if ( ! params.skip_multiallelic_filter ) {
             final_vcfs = MULTIALLELIC_FILTER(final_vcfs)
             final_vcfs = MULTIALLELIC_FILTER.out.filtered_vcf
+        }
+        if (params.phasing_sample) {
+            WHATSHAP(final_vcfs.join(input_bams.groupTuple()))
+            final_vcfs = WHATSHAP.out.phased_vcf
         }
     }
 

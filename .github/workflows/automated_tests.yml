@@ -26,4 +26,5 @@ jobs:
       run: conda config --show-sources
     - name: Run tests
       run: |
+        export NXF_VER=22.04.5
         make
