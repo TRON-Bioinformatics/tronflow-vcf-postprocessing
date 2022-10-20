@@ -35,7 +35,7 @@ params.skip_multiallelic_filter = false
 // SnpEff input
 params.snpeff_organism = false
 params.snpeff_datadir = false
-params.phasing = false
+params.phasing_sample = false
 
 
 if (params.help) {
@@ -140,7 +140,7 @@ workflow {
             final_vcfs = MULTIALLELIC_FILTER(final_vcfs)
             final_vcfs = MULTIALLELIC_FILTER.out.filtered_vcf
         }
-        if (params.phasing) {
+        if (params.phasing_sample) {
             WHATSHAP(final_vcfs.join(input_bams.groupTuple()))
             final_vcfs = WHATSHAP.out.phased_vcf
         }

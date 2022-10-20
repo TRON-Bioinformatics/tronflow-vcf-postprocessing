@@ -24,6 +24,7 @@ process WHATSHAP {
         .join(" ") ;
     """
     whatshap phase \
+    --indel \
     -o ${patient_name}.phased.vcf \
     --reference=${params.reference} \
     ${vcf} \
