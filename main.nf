@@ -7,13 +7,23 @@ include { BCFTOOLS_NORM; VT_DECOMPOSE_COMPLEX; REMOVE_DUPLICATES } from './modul
 include { SUMMARY_VCF; SUMMARY_VCF as SUMMARY_VCF_2 } from './modules/03_summary'
 include { VAFATOR; MULTIALLELIC_FILTER } from './modules/04_vafator'
 include { WHATSHAP } from './modules/05_phasing'
-include { VARIANT_ANNOTATION } from './modules/06_variant_annotation'
+include { VARIANT_ANNOTATION_SNPEFF; VARIANT_ANNOTATION_BCFTOOLS } from './modules/06_variant_annotation'
+
 
 params.help= false
 params.input_vcfs = false
 params.input_bams = false
 params.input_vcf = false
+
+// optional VAFator inputs
+params.input_bams = false
+params.input_purities = false
+params.input_clonalities = false
+
+
 params.reference = false
+params.gff = false
+
 params.output = "output"
 params.skip_normalization = false
 params.skip_decompose_complex = false
@@ -21,9 +31,11 @@ params.filter = false
 params.cpus = 1
 params.memory = "4g"
 params.skip_multiallelic_filter = false
+
+// SnpEff input
 params.snpeff_organism = false
 params.snpeff_datadir = false
-params.phasing_sample = false
+params.phasing = false
 
 
 if (params.help) {
@@ -33,6 +45,10 @@ if (params.help) {
 
 if ( params.snpeff_organism && ! params.snpeff_datadir) {
   exit 1, "To run snpEff, please, provide your snpEff data folder with --snpeff_datadir"
+}
+
+if (params.snpeff_organism && params.gff) {
+    exit 1, "Please use either SnpEff (--snpeff_organism) or BCFtools csq (--gff), but not both"
 }
 
 if (params.skip_normalization && ! params.input_bams && ! params.snpeff_organism) {
@@ -60,9 +76,31 @@ else if (params.input_vcf) {
 if (params.input_bams) {
     Channel
     .fromPath(params.input_bams)
-    .splitCsv(header: ['name', 'sample_name', 'bam'], sep: "\t")
-    .map{ row-> tuple(row.name, row.sample_name, row.bam) }
+    .splitCsv(header: ['name', 'bam'], sep: "\t")
+    .map{ row-> tuple(row.name, row.bam) }
     .set { input_bams }
+}
+
+if (params.input_purities) {
+    Channel
+    .fromPath(params.input_purities)
+    .splitCsv(header: ['name', 'purity'], sep: "\t")
+    .map{ row-> tuple(row.name, row.purity) }
+    .set { input_purities }
+}
+else {
+    input_purities = Channel.fromList([])
+}
+
+if (params.input_clonalities) {
+    Channel
+    .fromPath(params.input_clonalities)
+    .splitCsv(header: ['name', 'clonality_bed'], sep: "\t")
+    .map{ row-> tuple(row.name, row.clonality_bed) }
+    .set { input_clonalities }
+}
+else {
+    input_clonalities = Channel.fromList([])
 }
 
 workflow {
@@ -90,21 +128,31 @@ workflow {
     }
 
     if ( params.input_bams ) {
-        VAFATOR(final_vcfs.join(input_bams.groupTuple()))
+        // prepare input for VAFator and call it
+        vafator_input = final_vcfs.join(input_bams.groupTuple())
+            .join(input_purities.groupTuple(), remainder: true)
+            .join(input_clonalities.groupTuple(), remainder: true)
+
+        VAFATOR(vafator_input)
+
         final_vcfs = VAFATOR.out.annotated_vcf
         if ( ! params.skip_multiallelic_filter ) {
-            MULTIALLELIC_FILTER(final_vcfs)
+            final_vcfs = MULTIALLELIC_FILTER(final_vcfs)
             final_vcfs = MULTIALLELIC_FILTER.out.filtered_vcf
         }
-        if (params.phasing_sample) {
+        if (params.phasing) {
             WHATSHAP(final_vcfs.join(input_bams.groupTuple()))
             final_vcfs = WHATSHAP.out.phased_vcf
         }
     }
 
     if (params.snpeff_organism) {
-        VARIANT_ANNOTATION(final_vcfs)
-        final_vcfs = VARIANT_ANNOTATION.out.annotated_vcf
+        VARIANT_ANNOTATION_SNPEFF(final_vcfs)
+        final_vcfs = VARIANT_ANNOTATION_SNPEFF.out.annotated_vcf
+    }
+    else if (params.gff) {
+        VARIANT_ANNOTATION_BCFTOOLS(final_vcfs)
+        final_vcfs = VARIANT_ANNOTATION_BCFTOOLS.out.annotated_vcf
     }
 }
 

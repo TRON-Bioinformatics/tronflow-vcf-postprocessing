@@ -1,0 +1,4 @@
+tumor_normal	primary:/home/priesgo/src/github/tronflow-variant-normalization/test/data/best.seg.minimal.my_metastasis.bed
+tumor_normal	normal:/home/priesgo/src/github/tronflow-variant-normalization/test/data/best.seg.minimal.my_tumor.bed
+single_sample	tumor:3
+single_sample	normal:2

@@ -12,23 +12,25 @@ process VAFATOR {
     tag "${patient_name}"
     publishDir "${params.output}/${patient_name}", mode: "copy"
 
-    conda (params.enable_conda ? "bioconda::vafator=1.2.5" : null)
+    conda (params.enable_conda ? "bioconda::vafator=2.1.0" : null)
 
     input:
-    tuple val(patient_name), file(vcf), val(bams)
+    tuple val(patient_name), file(vcf), val(bams), val(purities), val(clonalities)
 
     output:
     tuple val(patient_name), file("${patient_name}.vaf.vcf"), emit: annotated_vcf
 
     script:
     bams_param = bams.collect { b -> "--bam " + b.split(":").join(" ") }.join(" ")
+    purity_param = purities.collect { b -> "--purity " + b.split(":").join(" ") }.join(" ")
+    clonality_param = clonalities.collect { b -> "--tumor-ploidy " + b.split(":").join(" ") }.join(" ")
     """
     vafator \
     --input-vcf ${vcf} \
     --output-vcf ${patient_name}.vaf.vcf \
     --mapping-quality ${params.mapping_quality} \
     --base-call-quality ${params.base_call_quality} \
-    ${bams_param}
+    ${bams_param} ${purity_param} ${clonality_param}
     """
 }
 
@@ -39,7 +41,7 @@ process MULTIALLELIC_FILTER {
     tag "${name}"
     publishDir "${params.output}/${name}", mode: "copy"
 
-    conda (params.enable_conda ? "bioconda::vafator=1.2.5" : null)
+    conda (params.enable_conda ? "bioconda::vafator=2.1.0" : null)
 
     input:
     tuple val(name), file(vcf)

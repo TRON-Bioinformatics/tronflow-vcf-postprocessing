@@ -1,0 +1,6 @@
+tumor_normal	primary:/home/priesgo/src/github/tronflow-variant-normalization/test/data/TESTX_S1_L001.bam
+tumor_normal	normal:/home/priesgo/src/github/tronflow-variant-normalization/test/data/TESTX_S1_L002.bam
+single_sample	tumor:/home/priesgo/src/github/tronflow-variant-normalization/test/data/TESTX_S1_L001.bam
+single_sample	tumor:/home/priesgo/src/github/tronflow-variant-normalization/test/data/TESTX_S1_L002.bam
+single_sample	normal:/home/priesgo/src/github/tronflow-variant-normalization/test/data/TESTX_S1_L001.bam
+single_sample	normal:/home/priesgo/src/github/tronflow-variant-normalization/test/data/TESTX_S1_L002.bam

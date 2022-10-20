@@ -14,9 +14,9 @@ Find the documentation here [![Documentation Status](https://readthedocs.org/pro
 
 This pipeline has several objectives:
 * Variant filtering
-* Variant normalization
-* Technical annotations from different BAM files
-* Functional annotations
+* Variant normalization (BCFtools and vt)
+* Technical annotations from different BAM files (VAFator)
+* Functional annotations (SnpEff or BCFtools csq)
 
 All of the previous steps are optional.
 
@@ -36,7 +36,7 @@ Find the help as follows:
  ```
  $ nextflow run tron-bioinformatics/tronflow-vcf-postprocessing --help
  
- TronFlow VCF normalization v${VERSION}
+ TronFlow VCF postprocessing v${VERSION}
 
 Usage:
     nextflow run main.nf --input_vcfs input_vcfs --reference reference.fasta
@@ -51,7 +51,24 @@ Input:
     sample2	/path/to/your/file2.vcf
 
 Optional input:
-    * --reference: path to the FASTA genome reference (indexes expected *.fai, *.dict) [required for normalization]
+    * --input_bams: a tab-separated values file containing in each row the sample name and path to a BAM file for VAFator annotations
+    The input file does not have header!
+    Example input file:
+    sample1	primary:/path/to/your/file.vcf
+    sample1	metastasis:/path/to/your/file2.vcf
+    * --input_purities: a tab-separated values file containing in each row the sample name and a purity value for VAFator annotations
+    The input file does not have header!
+    Example input file:
+    sample1	primary:0.5
+    sample1	metastasis:0.6
+    * --input_clonalities: a tab-separated values file containing in each row the sample name and a either a 
+    genome-wide clonality value or a Bedgraph file with local clonality values for VAFator annotations
+    The input file does not have header!
+    Example input file:
+    sample1	primary:3
+    sample1	metastasis:/path/to/metastasis.local_clonalities.bed
+    * --reference: absolute path to the FASTA genome reference (indexes expected *.fai, *.dict) [required for normalization and for functional annotation with BCFtools]
+    * --gff: absolute path to a GFF gene annotations file [required for functional annotation with BCFtools, only Ensembl-like GFF files]
     * --vcf-without-ad: indicate when the VCFs to normalize do not have the FORMAT/AD annotation
     * --output: the folder where to publish output
     * --skip_normalization: flag indicating to skip all normalization steps
@@ -63,6 +80,7 @@ Optional input:
     * --snpeff_organism: the SnpEff organism name (eg: hg19, hg38, GRCh37.75, GRCh38.99)
     * --snpeff_datadir: the SnpEff data folder where the reference genomes were previously downloaded. Required if --snpeff_organism is provided
     * --snpeff_args: additional SnpEff arguments
+    * --snpeff_memory: for some samples SnpEff may require to use more memory (default: 3g)
     * --mapping_quality: VAFator minimum mapping quality (default: 0)
     * --base_call_quality: VAFator minimum base call quality (default: 0)
 
@@ -74,28 +92,54 @@ Output:
 
 ### Input tables
 
-The table with VCF files expects two tab-separated columns without a header
+The table with **VCF files** expects two tab-separated columns without a header
 
-| Patient name          | VCF                                                             |
-|----------------------|------------------------------------------------------------------------|
-| patient_1             | /path/to/patient_1.vcf               |
-| patient_2             | /path/to/patient_2.vcf                    |
+| Patient name      | VCF                                    |
+|-------------------|----------------------------------------|
+| patient_1         | /path/to/patient_1.vcf                 |
+| patient_2         | /path/to/patient_2.vcf                 |
 
-The optional table with BAM files expects two tab-separated columns without a header.
+The optional table with **BAM files** expects two tab-separated columns without a header.
 
-| Patient name          | Sample name:BAM                      |
-|----------------------|---------------------------------|
-| patient_1             | primary_tumor:/path/to/sample_1.primary.bam   |
-| patient_1             | metastasis_tumor:/path/to/sample_1.metastasis.bam   |
-| patient_1             | normal:/path/to/sample_1.normal.bam   |
-| patient_2             | primary_tumor:/path/to/sample_1.primary_1.bam   |
-| patient_2             | primary_tumor:/path/to/sample_1.primary_2.bam   |
-| patient_2             | metastasis_tumor:/path/to/sample_1.metastasis.bam   |
-| patient_2             | normal:/path/to/sample_1.normal.bam   |
+| Patient name       | Sample name:BAM                                   |
+|--------------------|---------------------------------------------------|
+| patient_1          | primary_tumor:/path/to/sample_1.primary.bam       |
+| patient_1          | metastasis_tumor:/path/to/sample_1.metastasis.bam |
+| patient_1          | normal:/path/to/sample_1.normal.bam               |
+| patient_2          | primary_tumor:/path/to/sample_1.primary_1.bam     |
+| patient_2          | primary_tumor:/path/to/sample_1.primary_2.bam     |
+| patient_2          | metastasis_tumor:/path/to/sample_1.metastasis.bam |
+| patient_2          | normal:/path/to/sample_1.normal.bam               |
 
 Each patient can have any number of samples. Any sample can have any number of BAM files, annotations from the 
 different BAM files of the same sample will be provided with suffixes _1, _2, etc.
 The aggregated vafator annotations on each sample will also be provided without a suffix.
+
+
+The optional table with **tumor purities** expects two tab-separated columns without a header. 
+The default purity is 1.0.
+Purity values are in the range 0.0 to 1.0.
+The purity values are used to adjust the expected VAF which is then used to calculate the power to detect a 
+somatic mutation and the probability of an undetected somatic mutation.
+
+| Patient name       | Sample name:purity   |
+|--------------------|----------------------|
+| patient_1          | primary_tumor:0.4    |
+| patient_1          | metastasis_tumor:0.5 |
+| patient_2          | primary_tumor:0.6    |
+| patient_2          | metastasis_tumor:0.7 |
+
+The optional table with **local clonality** values expects two tab-separated columns without a header.
+The local clonalities are provided in a Bedgraph file as described in VAFator documentation or as a genome-wide
+numeric parameter.
+
+| Patient name       | Sample name:local clonalities                                        |
+|--------------------|----------------------------------------------------------------------|
+| patient_1          | primary_tumor:/path/to/patient_1.primary.local_clonalities.bed       |
+| patient_1          | metastasis_tumor:/path/to/patient_1.metastasis.local_clonalities.bed |
+| patient_2          | primary_tumor:3                                                      |
+| patient_2          | metastasis_tumor:2                                                   |
+
 
 ## Variant filtering
 
@@ -227,7 +271,10 @@ No technical annotations are performed if the parameter `--input_bams` is not pa
 ## Functional annotations
 
 The functional annotations provide a biological context for every variant. Such as the overlapping genes or the effect 
-of the variant in a protein. These annotations are provided by SnpEff (Cingolani, 2012).
+of the variant in a protein. These annotations are provided by SnpEff (Cingolani, 2012) or by BCFtools csq (Danecek, 2017).
+Only one of the previous can be used.
+
+### Using SnpEff
 
 The SnpEff available human annotations are:
 * GRCh37.75 
@@ -247,7 +294,15 @@ To provide any additional SnpEff arguments use `--snpeff_args` such as
 `--snpeff_args "-noStats -no-downstream -no-upstream -no-intergenic -no-intron -onlyProtein -hgvs1LetterAa -noShiftHgvs"`, 
 otherwise defaults will be used.
 
-No functional annotations are performed if the parameters `--snpeff_organism` and `--snpeff_datadir` are not passed.
+No SnpEff functional annotations are performed if the parameters `--snpeff_organism` and `--snpeff_datadir` are not passed.
+
+### Using BCFtools csq
+
+BCFtools does not require any previous preparation. It expects two parameters: 
+* `--reference`: absolute path to the FASTA reference genome
+* `--gff`: absolute path to the Ensembl-like GFF annotations (ie: Gencode GFF files do not work https://github.com/samtools/bcftools/issues/1078)
+
+Importantly, BCFtools does use the available phasing information to evaluate all mutations affecting any given transcript together.
 
 
 ## References
@@ -256,3 +311,4 @@ No functional annotations are performed if the parameters `--snpeff_organism` an
 * Danecek P, Bonfield JK, Liddle J, Marshall J, Ohan V, Pollard MO, Whitwham A, Keane T, McCarthy SA, Davies RM, Li H. Twelve years of SAMtools and BCFtools. Gigascience. 2021 Feb 16;10(2):giab008. doi: 10.1093/gigascience/giab008. PMID: 33590861; PMCID: PMC7931819.
 * Di Tommaso, P., Chatzou, M., Floden, E. W., Barja, P. P., Palumbo, E., & Notredame, C. (2017). Nextflow enables reproducible computational workflows. Nature Biotechnology, 35(4), 316–319. 10.1038/nbt.3820
 * Cingolani P, Platts A, Wang le L, Coon M, Nguyen T, Wang L, Land SJ, Lu X, Ruden DM. (2012) A program for annotating and predicting the effects of single nucleotide polymorphisms, SnpEff: SNPs in the genome of Drosophila melanogaster strain w1118; iso-2; iso-3.". Fly (Austin). 2012 Apr-Jun;6(2):80-92. PMID: 22728672
+* Danecek, P., & McCarthy, S. A. (2017). BCFtools/csq: haplotype-aware variant consequences. Bioinformatics, 33(13), 2037–2039. https://doi.org/10.1093/bioinformatics/btx100
