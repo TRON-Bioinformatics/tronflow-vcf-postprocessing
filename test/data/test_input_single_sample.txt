@@ -1,0 +1,1 @@
+single_sample	test/data/test_single_sample.vcf
