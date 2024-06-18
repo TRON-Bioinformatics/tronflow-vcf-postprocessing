@@ -11,7 +11,7 @@ echo -e "single_sample\ttumor:"`pwd`"/test/data/TESTX_S1_L002.bam" >> test/data/
 echo -e "single_sample\tnormal:"`pwd`"/test/data/TESTX_S1_L001.bam" >> test/data/test_bams.txt
 echo -e "single_sample\tnormal:"`pwd`"/test/data/TESTX_S1_L002.bam" >> test/data/test_bams.txt
 
-nextflow main.nf -profile test,conda --output $output_folder --input_bams test/data/test_bams.txt
+nextflow main.nf -profile test,conda,ci --output $output_folder --input_bams test/data/test_bams.txt
 
 test -s $output_folder/single_sample/single_sample.normalized.vcf || { echo "Missing test 8 output file!"; exit 1; }
 test -s $output_folder/tumor_normal/tumor_normal.normalized.vcf || { echo "Missing test 8 output file!"; exit 1; }
