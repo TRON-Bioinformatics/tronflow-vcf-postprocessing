@@ -36,7 +36,7 @@ process VARIANT_ANNOTATION_BCFTOOLS {
     publishDir "${params.output}/${name}", mode: "copy"
     tag "${name}"
 
-    conda (params.enable_conda ? "conda-forge::libgcc-ng=14.2.0 bioconda::bcftools=1.15.1" : null)
+    conda (params.enable_conda ? "conda-forge::libgcc-ng=14.2.0 conda-forge::gsl=2.7 bioconda::bcftools=1.15.1" : null)
 
     input:
         tuple val(name), file(vcf)
