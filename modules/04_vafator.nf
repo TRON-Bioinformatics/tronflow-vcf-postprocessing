@@ -41,7 +41,7 @@ process MULTIALLELIC_FILTER {
     tag "${name}"
     publishDir "${params.output}/${name}", mode: "copy"
 
-    conda (params.enable_conda ? "bioconda::vafator=2.0.3" : null)
+    conda (params.enable_conda ? "bioconda::vafator=2.2.0" : null)
 
     input:
     tuple val(name), file(vcf)
